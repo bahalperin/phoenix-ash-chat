@@ -2,16 +2,17 @@ defmodule App.Chat.Channel do
   use Ash.Resource,
     data_layer: AshPostgres.DataLayer
 
+  attributes do
+    uuid_primary_key :id
+
+    attribute :name, :string do
+      allow_nil? false
+    end
+  end
+
   postgres do
     table "channel"
     repo App.Repo
-  end
-
-  code_interface do
-    define_for App.Chat
-    define :create, action: :create
-    define :read_all, action: :read
-    define :get_by_id, args: [:id], action: :by_id
   end
 
   actions do
@@ -25,11 +26,10 @@ defmodule App.Chat.Channel do
     end
   end
 
-  attributes do
-    uuid_primary_key :id
-
-    attribute :name, :string do
-      allow_nil? false
-    end
+  code_interface do
+    define_for App.Chat
+    define :create, action: :create
+    define :read_all, action: :read
+    define :get_by_id, args: [:id], action: :by_id
   end
 end

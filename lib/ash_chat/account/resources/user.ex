@@ -3,12 +3,6 @@ defmodule App.Account.User do
     data_layer: AshPostgres.DataLayer,
     extensions: [AshAuthentication]
 
-  attributes do
-    uuid_primary_key :id
-    attribute :email, :ci_string, allow_nil?: false
-    attribute :hashed_password, :string, allow_nil?: false, sensitive?: true
-  end
-
   authentication do
     api App.Account
 
@@ -28,6 +22,12 @@ defmodule App.Account.User do
 
       signing_secret(Application.compile_env(:ash_chat, AppWeb.Endpoint)[:secret_key_base])
     end
+  end
+
+  attributes do
+    uuid_primary_key :id
+    attribute :email, :ci_string, allow_nil?: false
+    attribute :hashed_password, :string, allow_nil?: false, sensitive?: true
   end
 
   postgres do

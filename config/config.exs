@@ -38,6 +38,20 @@ config :ash_chat, App.Mailer, adapter: Swoosh.Adapters.Local
 # see https://ash-hq.org/docs/guides/ash/latest/get-started#temporary-config for more details
 config :ash, :use_all_identities_in_manage_relationship?, false
 
+config :spark, :formatter,
+  remove_parens?: true,
+  "Ash.Resource": [
+    type: Ash.Resource,
+    section_order: [
+      :authentication,
+      :token,
+      :attributes,
+      :relationships,
+      :policies,
+      :postgres
+    ]
+  ]
+
 # Configure esbuild (the version is required)
 config :esbuild,
   version: "0.14.41",
