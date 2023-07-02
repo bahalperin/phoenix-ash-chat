@@ -41,6 +41,6 @@ defmodule App.Account.Email do
     |> subject(subject)
     |> put_provider_option(:track_links, "None")
     |> html_body(body)
-    |> Example.Mailer.deliver!()
+    |> App.Mailer.deliver!()
   end
 end
