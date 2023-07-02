@@ -16,6 +16,14 @@ defmodule App.Chat.Channel do
     prefix "channel"
   end
 
+  relationships do
+    many_to_many :members, App.Account.User do
+      through App.Chat.ChannelMember
+      source_attribute_on_join_resource :channel_id
+      destination_attribute_on_join_resource :user_id
+    end
+  end
+
   postgres do
     table "channel"
     repo App.Repo

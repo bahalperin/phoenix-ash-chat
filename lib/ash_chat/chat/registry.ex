@@ -6,6 +6,8 @@ defmodule App.Chat.Registry do
     ]
 
   entries do
+    entry App.Account.User
     entry App.Chat.Channel
+    entry App.Chat.ChannelMember
   end
 end
