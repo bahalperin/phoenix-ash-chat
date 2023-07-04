@@ -14,14 +14,19 @@ defmodule AppWeb.ChannelLive do
         <div class="flex flex-col flex-1 py-2 gap-2 overflow-y-scroll">
           <%= for channel <- @channels do %>
             <div class="px-4">
-              <%= channel.name %>
+              <.link
+                navigate={~p"/channel/#{channel.id}"}
+                class={[channel.id === @channel_id && "font-bold"]}
+              >
+                <%= channel.name %>
+              </.link>
             </div>
           <% end %>
         </div>
       </aside>
 
       <div class="flex flex-col h-full flex-1 bg-slate-800 text-white">
-        <div class="flex flex-col-reverse overflow-y-scroll">
+        <div class="flex flex-col-reverse flex-1 overflow-y-scroll">
           <%= for message <- @messages do %>
             <div class="px-4 font-sans">
               <%= message.text %>
@@ -82,6 +87,24 @@ defmodule AppWeb.ChannelLive do
       )
 
     {:ok, socket}
+  end
+
+  def handle_params(%{"id" => channel_id}, _uri, socket) do
+    current_channel =
+      socket.assigns.channels |> Enum.find(fn channel -> channel.id == channel_id end)
+
+    current_channel =
+      Ash.Api.load!(Channel, current_channel, :messages)
+
+    socket =
+      socket
+      |> assign(
+        channel_id: channel_id,
+        channel: current_channel,
+        messages: current_channel.messages
+      )
+
+    {:noreply, socket}
   end
 
   def handle_event("send_message", %{"form" => params}, socket) do
