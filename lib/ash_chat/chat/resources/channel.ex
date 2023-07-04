@@ -22,6 +22,8 @@ defmodule App.Chat.Channel do
       source_attribute_on_join_resource :channel_id
       destination_attribute_on_join_resource :user_id
     end
+
+    has_many :messages, App.Chat.Message
   end
 
   postgres do
