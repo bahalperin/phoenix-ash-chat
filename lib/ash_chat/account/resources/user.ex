@@ -20,7 +20,9 @@ defmodule App.Account.User do
       enabled?(true)
       token_resource(App.Account.Token)
 
-      signing_secret(Application.compile_env(:ash_chat, AppWeb.Endpoint)[:secret_key_base])
+      signing_secret(fn _, _ ->
+        {:ok, Application.get_env(:ash_chat, AppWeb.Endpoint)[:secret_key_base]}
+      end)
     end
   end
 
