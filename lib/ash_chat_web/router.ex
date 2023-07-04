@@ -31,6 +31,7 @@ defmodule AppWeb.Router do
     ash_authentication_live_session :chat_authentication_required,
       on_mount: {AppWeb.LiveUserAuth, :live_user_required},
       layout: {AppWeb.Layouts, :chat} do
+      live "/channel", ChannelLive
       live "/channel/:id", ChannelLive
     end
   end

@@ -22,7 +22,7 @@ defmodule AppWeb.ChannelLive do
             <div class="px-4">
               <.link
                 navigate={~p"/channel/#{channel.id}"}
-                class={[channel.id === @channel.id && "font-bold"]}
+                class={[@channel && channel.id === @channel.id && "font-bold"]}
               >
                 <%= channel.name %>
               </.link>
@@ -32,24 +32,30 @@ defmodule AppWeb.ChannelLive do
       </aside>
 
       <div class="flex flex-col h-full flex-1 bg-slate-800 text-white">
-        <div
-          class="flex flex-col-reverse flex-1 overflow-y-scroll"
-          id={"#{@channel.id}-chat-messages"}
-          phx-update="prepend"
-        >
-          <%= for message <- @messages do %>
-            <div id={"message-#{message.id}"} class="px-4 font-sans">
-              <%= message.text %>
-            </div>
-          <% end %>
-        </div>
-        <.simple_form for={@message_form} phx-submit="send_message" container_class="p-4 bg-slate-800">
-          <.input
-            field={@message_form[:text]}
-            placeholder={"Message ##{@channel.name}"}
-            class="bg-slate-800 text-white"
-          />
-        </.simple_form>
+        <%= if @channel do %>
+          <div
+            class="flex flex-col-reverse flex-1 overflow-y-scroll"
+            id={"#{@channel.id}-chat-messages"}
+            phx-update="prepend"
+          >
+            <%= for message <- @messages do %>
+              <div id={"message-#{message.id}"} class="px-4 font-sans">
+                <%= message.text %>
+              </div>
+            <% end %>
+          </div>
+          <.simple_form
+            for={@message_form}
+            phx-submit="send_message"
+            container_class="p-4 bg-slate-800"
+          >
+            <.input
+              field={@message_form[:text]}
+              placeholder={"Message ##{@channel.name}"}
+              class="bg-slate-800 text-white"
+            />
+          </.simple_form>
+        <% end %>
       </div>
 
       <.modal
@@ -78,23 +84,28 @@ defmodule AppWeb.ChannelLive do
     """
   end
 
-  def mount(%{"id" => channel_id}, _session, socket) do
+  def mount(params, _session, socket) do
     AppWeb.Endpoint.subscribe("message:created")
     AppWeb.Endpoint.subscribe("channel:created")
 
     channels = Channel.read_all!()
 
+    channel_id = params["id"] || nil
     current_channel = channels |> Enum.find(fn channel -> channel.id == channel_id end)
 
     current_channel =
-      Ash.Api.load!(Channel, current_channel, :messages)
+      if current_channel do
+        Ash.Api.load!(Channel, current_channel, :messages)
+      else
+        nil
+      end
 
     socket =
       socket
       |> assign(
         channel: current_channel,
         channels: channels,
-        messages: current_channel.messages,
+        messages: if(current_channel, do: current_channel.messages, else: []),
         message_form: AshPhoenix.Form.for_create(Message, :send) |> to_form(),
         add_channel_form:
           AshPhoenix.Form.for_create(Channel, :create,
@@ -107,18 +118,24 @@ defmodule AppWeb.ChannelLive do
     {:ok, socket, temporary_assigns: [messages: []]}
   end
 
-  def handle_params(%{"id" => channel_id}, _uri, socket) do
+  def handle_params(params, _uri, socket) do
+    channel_id = params["id"] || nil
+
     current_channel =
       socket.assigns.channels |> Enum.find(fn channel -> channel.id == channel_id end)
 
     current_channel =
-      Ash.Api.load!(Channel, current_channel, :messages)
+      if current_channel do
+        Ash.Api.load!(Channel, current_channel, :messages)
+      else
+        nil
+      end
 
     socket =
       socket
       |> assign(
         channel: current_channel,
-        messages: current_channel.messages
+        messages: if(current_channel, do: current_channel.messages, else: [])
       )
 
     {:noreply, socket}
