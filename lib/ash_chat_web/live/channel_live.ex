@@ -120,8 +120,8 @@ defmodule AppWeb.ChannelLive do
 
   def handle_event("create_channel", %{"form" => params}, socket) do
     case AshPhoenix.Form.submit(socket.assigns.add_channel_form, params: params) do
-      {:ok, _channel} ->
-        {:noreply, socket |> push_navigate(to: ~p"/channel/#{socket.assigns.channel.id}")}
+      {:ok, channel} ->
+        {:noreply, socket |> push_navigate(to: ~p"/channel/#{channel.id}")}
 
       {:error, form} ->
         {:noreply, socket |> assign(add_chanel_form: form)}
