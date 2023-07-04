@@ -34,7 +34,7 @@ defmodule AppWeb.ChannelLive do
       <div class="flex flex-col h-full flex-1 bg-slate-800 text-white">
         <div
           class="flex flex-col-reverse flex-1 overflow-y-scroll"
-          id="chat-messages"
+          id={"#{@channel.id}-chat-messages"}
           phx-update="prepend"
         >
           <%= for message <- @messages do %>
@@ -131,8 +131,7 @@ defmodule AppWeb.ChannelLive do
       actor: socket.assigns.current_user
     )
 
-    {:noreply,
-     socket |> assign(message_form: AshPhoenix.Form.for_create(Message, :send) |> to_form())}
+    {:noreply, socket |> push_patch(to: ~p"/channel/#{socket.assigns.channel.id}", replace: true)}
   end
 
   def handle_event("create_channel", %{"form" => params}, socket) do
