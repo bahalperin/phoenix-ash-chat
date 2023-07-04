@@ -16,7 +16,7 @@ defmodule AppWeb.ChannelLive do
             <div class="px-4">
               <.link
                 navigate={~p"/channel/#{channel.id}"}
-                class={[channel.id === @channel_id && "font-bold"]}
+                class={[channel.id === @channel.id && "font-bold"]}
               >
                 <%= channel.name %>
               </.link>
@@ -76,7 +76,6 @@ defmodule AppWeb.ChannelLive do
     socket =
       socket
       |> assign(
-        channel_id: channel_id,
         channel: current_channel,
         channels: channels,
         messages: current_channel.messages,
@@ -103,7 +102,6 @@ defmodule AppWeb.ChannelLive do
     socket =
       socket
       |> assign(
-        channel_id: channel_id,
         channel: current_channel,
         messages: current_channel.messages
       )
@@ -112,7 +110,7 @@ defmodule AppWeb.ChannelLive do
   end
 
   def handle_event("send_message", %{"form" => params}, socket) do
-    Message.send(%{text: params["text"], channel_id: socket.assigns.channel_id},
+    Message.send(%{text: params["text"], channel_id: socket.assigns.channel.id},
       actor: socket.assigns.current_user
     )
 
@@ -123,7 +121,7 @@ defmodule AppWeb.ChannelLive do
   def handle_event("create_channel", %{"form" => params}, socket) do
     case AshPhoenix.Form.submit(socket.assigns.add_channel_form, params: params) do
       {:ok, _channel} ->
-        {:noreply, socket |> push_navigate(to: ~p"/channel/#{socket.assigns.channel_id}")}
+        {:noreply, socket |> push_navigate(to: ~p"/channel/#{socket.assigns.channel.id}")}
 
       {:error, form} ->
         {:noreply, socket |> assign(add_chanel_form: form)}
@@ -143,7 +141,7 @@ defmodule AppWeb.ChannelLive do
         socket
       ) do
     socket =
-      if message.channel_id == socket.assigns.channel_id do
+      if message.channel_id == socket.assigns.channel.id do
         socket |> assign(:messages, [message])
       else
         socket
