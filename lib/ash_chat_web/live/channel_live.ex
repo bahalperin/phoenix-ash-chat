@@ -17,14 +17,17 @@ defmodule AppWeb.ChannelLive do
             <Heroicons.plus_circle solid class="h-5 w-5" />
           </.button>
         </div>
-        <div class="flex flex-col flex-1 py-2 gap-2 overflow-y-scroll">
+        <div class="flex flex-col flex-1 py-2 gap-0.5 overflow-y-scroll w-full items-stretch">
           <%= for channel <- @channels do %>
-            <div class="px-4">
+            <div class="px-2">
               <.link
                 navigate={~p"/channel/#{channel.id}"}
-                class={[@channel && channel.id === @channel.id && "font-bold"]}
+                class={[
+                  @channel && channel.id === @channel.id && "font-bold",
+                  "hover:bg-slate-800 p-2 w-full inline-block rounded-md"
+                ]}
               >
-                <%= channel.name %>
+                # <%= channel.name %>
               </.link>
             </div>
           <% end %>
