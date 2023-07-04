@@ -26,7 +26,7 @@ defmodule App.Chat.Channel do
       writable? true
     end
 
-    has_many :messages, App.Chat.Message
+    has_many :messages, App.Chat.Message, sort: [created_at: :desc]
   end
 
   postgres do

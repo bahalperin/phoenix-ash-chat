@@ -6,6 +6,9 @@ defmodule App.Chat.Message do
   attributes do
     uuid_primary_key :id
 
+    create_timestamp :created_at
+    update_timestamp :updated_at
+
     attribute :text, :string do
       allow_nil? false
     end
