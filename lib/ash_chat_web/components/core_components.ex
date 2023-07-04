@@ -301,7 +301,7 @@ defmodule AppWeb.CoreComponents do
   attr :multiple, :boolean, default: false, doc: "the multiple flag for select inputs"
   attr :rest, :global, include: ~w(autocomplete cols disabled form max maxlength min minlength
                                    pattern placeholder readonly required rows size step)
-  attr :class, :string
+  attr :class, :string, default: nil
 
   slot :inner_block
 

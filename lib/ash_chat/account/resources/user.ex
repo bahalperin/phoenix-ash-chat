@@ -35,6 +35,12 @@ defmodule App.Account.User do
     repo App.Repo
   end
 
+  actions do
+    read :read do
+      primary? true
+    end
+  end
+
   identities do
     identity :unique_email, [:email]
   end

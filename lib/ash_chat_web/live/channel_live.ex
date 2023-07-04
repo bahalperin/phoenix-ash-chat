@@ -7,10 +7,17 @@ defmodule AppWeb.ChannelLive do
   def render(assigns) do
     ~H"""
     <div class="flex flex-row flex-1 h-full w-full">
-      <aside class="flex flex-col w-48 h-full flex-0 p-4 border-r border-slate-50 bg-slate-600 text-white">
-        <%= for channel <- @channels do %>
-          <%= channel.name %>
-        <% end %>
+      <aside class="flex flex-col w-48 h-full flex-0 border-r border-slate-50 bg-slate-600 text-white">
+        <div class="p-4 border-b border-slate-50">
+          <.button phx-click={show_modal("add_channel_modal")}>Add Channel</.button>
+        </div>
+        <div class="flex flex-col flex-1 py-2 gap-2 overflow-y-scroll">
+          <%= for channel <- @channels do %>
+            <div class="px-4">
+              <%= channel.name %>
+            </div>
+          <% end %>
+        </div>
       </aside>
 
       <div class="flex flex-col h-full flex-1 bg-slate-800 text-white">
@@ -29,12 +36,26 @@ defmodule AppWeb.ChannelLive do
           />
         </.simple_form>
       </div>
+
+      <.modal id="add_channel_modal" show={@adding_new_channel}>
+        <.simple_form
+          for={@add_channel_form}
+          phx-submit="create_channel"
+          phx-change="validate_channel"
+        >
+          <.input field={@add_channel_form[:name]} label="Channel Name" />
+          <:actions>
+            <.button>Submit</.button>
+          </:actions>
+        </.simple_form>
+      </.modal>
     </div>
     """
   end
 
   def mount(%{"id" => channel_id}, _session, socket) do
     AppWeb.Endpoint.subscribe("message:created")
+    AppWeb.Endpoint.subscribe("channel:created")
 
     channels = Channel.read_all!()
 
@@ -50,7 +71,14 @@ defmodule AppWeb.ChannelLive do
         channel: current_channel,
         channels: channels,
         messages: current_channel.messages,
-        message_form: AshPhoenix.Form.for_create(Message, :send) |> to_form()
+        message_form: AshPhoenix.Form.for_create(Message, :send) |> to_form(),
+        add_channel_form:
+          AshPhoenix.Form.for_create(Channel, :create,
+            api: App.Chat,
+            actor: socket.assigns.current_user
+          )
+          |> to_form(),
+        adding_new_channel: false
       )
 
     {:ok, socket}
@@ -63,6 +91,21 @@ defmodule AppWeb.ChannelLive do
 
     {:noreply,
      socket |> assign(message_form: AshPhoenix.Form.for_create(Message, :send) |> to_form())}
+  end
+
+  def handle_event("create_channel", %{"form" => params}, socket) do
+    case AshPhoenix.Form.submit(socket.assigns.add_channel_form, params: params) do
+      {:ok, _channel} ->
+        {:noreply, socket |> push_navigate(to: ~p"/channel/#{socket.assigns.channel_id}")}
+
+      {:error, form} ->
+        {:noreply, socket |> assign(add_chanel_form: form)}
+    end
+  end
+
+  def handle_event("validate_channel", %{"form" => params}, socket) do
+    form = AshPhoenix.Form.validate(socket.assigns.add_channel_form, params)
+    {:noreply, assign(socket, add_channel_form: form)}
   end
 
   def handle_info(
@@ -78,6 +121,19 @@ defmodule AppWeb.ChannelLive do
       else
         socket
       end
+
+    {:noreply, socket}
+  end
+
+  def handle_info(
+        %Phoenix.Socket.Broadcast{
+          topic: "channel:created",
+          payload: %Ash.Notifier.Notification{data: channel}
+        },
+        socket
+      ) do
+    socket =
+      socket |> assign(:channels, [channel | socket.assigns.channels])
 
     {:noreply, socket}
   end

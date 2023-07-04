@@ -14,6 +14,8 @@ defmodule App.Chat.Channel do
   pub_sub do
     module App.PubSub
     prefix "channel"
+
+    publish :create, ["created", [:id, nil]]
   end
 
   relationships do
@@ -21,6 +23,7 @@ defmodule App.Chat.Channel do
       through App.Chat.ChannelMember
       source_attribute_on_join_resource :channel_id
       destination_attribute_on_join_resource :user_id
+      writable? true
     end
 
     has_many :messages, App.Chat.Message
@@ -32,13 +35,21 @@ defmodule App.Chat.Channel do
   end
 
   actions do
-    defaults [:create, :read, :update, :destroy]
+    defaults [:read, :update, :destroy]
 
     # Defines custom read action which fetches post by id.
     read :by_id do
       argument :id, :uuid, allow_nil?: false
       get? true
       filter expr(id == ^arg(:id))
+    end
+
+    create :create do
+      accept [:name]
+
+      validate match(:name, ~r/^[[:graph:]]+$/), message: "No whitespace allowed in channel name"
+
+      change relate_actor(:members)
     end
   end
 

@@ -11,4 +11,8 @@ defmodule App.Chat.ChannelMember do
     table "channel_member"
     repo App.Repo
   end
+
+  actions do
+    defaults [:create, :read, :destroy]
+  end
 end
