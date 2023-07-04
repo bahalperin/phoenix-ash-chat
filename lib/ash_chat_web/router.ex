@@ -24,13 +24,13 @@ defmodule AppWeb.Router do
     get "/", PageController, :home
 
     sign_in_route(on_mount: [{AppWeb.LiveUserAuth, :live_no_user}])
-    # sign_in_route()
     sign_out_route AuthController
     auth_routes_for App.Account.User, to: AuthController
     reset_route []
 
-    ash_authentication_live_session :authentication_required,
-      on_mount: {AppWeb.LiveUserAuth, :live_user_required} do
+    ash_authentication_live_session :chat_authentication_required,
+      on_mount: {AppWeb.LiveUserAuth, :live_user_required},
+      layout: {AppWeb.Layouts, :chat} do
       live "/channel/:id", ChannelLive
     end
   end

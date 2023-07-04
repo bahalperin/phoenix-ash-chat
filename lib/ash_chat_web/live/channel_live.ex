@@ -6,27 +6,29 @@ defmodule AppWeb.ChannelLive do
 
   def render(assigns) do
     ~H"""
-    <div class="h-full w-100 flex flex-col items-stretch">
-      <%= @channel_id %>
-
-      <div class="flex flex-col">
+    <div class="flex flex-row flex-1 h-full w-full">
+      <aside class="flex flex-col w-48 h-full flex-0 p-4 border-r border-slate-50 bg-slate-600 text-white">
         <%= for channel <- @channels do %>
           <%= channel.name %>
         <% end %>
-      </div>
+      </aside>
 
-      <div class="flex flex-col">
-        <%= for message <- @messages do %>
-          <%= message.text %>
-        <% end %>
+      <div class="flex flex-col h-full flex-1 bg-slate-800 text-white">
+        <div class="flex flex-col-reverse overflow-y-scroll">
+          <%= for message <- @messages do %>
+            <div class="px-4 font-sans">
+              <%= message.text %>
+            </div>
+          <% end %>
+        </div>
+        <.simple_form for={@message_form} phx-submit="send_message" container_class="p-4 bg-slate-800">
+          <.input
+            field={@message_form[:text]}
+            placeholder={"Message ##{@channel.name}"}
+            class="bg-slate-800 text-white"
+          />
+        </.simple_form>
       </div>
-
-      <.simple_form for={@message_form} phx-submit="send_message">
-        <.input field={@message_form[:text]} label="Message" />
-        <:actions>
-          <.button>Send</.button>
-        </:actions>
-      </.simple_form>
     </div>
     """
   end
@@ -45,6 +47,7 @@ defmodule AppWeb.ChannelLive do
       socket
       |> assign(
         channel_id: channel_id,
+        channel: current_channel,
         channels: channels,
         messages: current_channel.messages,
         message_form: AshPhoenix.Form.for_create(Message, :send) |> to_form()
