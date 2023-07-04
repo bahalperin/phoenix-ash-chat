@@ -54,7 +54,6 @@ defmodule AppWeb.ChannelLive do
 
       <.modal
         id="add_channel_modal"
-        show={@adding_new_channel}
         container_class="bg-slate-800 text-white"
         background_class="bg-black opacity-80"
       >
@@ -102,8 +101,7 @@ defmodule AppWeb.ChannelLive do
             api: App.Chat,
             actor: socket.assigns.current_user
           )
-          |> to_form(),
-        adding_new_channel: false
+          |> to_form()
       )
 
     {:ok, socket, temporary_assigns: [messages: []]}
