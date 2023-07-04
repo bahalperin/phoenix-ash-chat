@@ -8,8 +8,14 @@ defmodule AppWeb.ChannelLive do
     ~H"""
     <div class="flex flex-row flex-1 h-full w-full">
       <aside class="flex flex-col w-48 h-full flex-0 border-r border-slate-50 bg-slate-600 text-white">
-        <div class="p-4 border-b border-slate-50">
-          <.button phx-click={show_modal("add_channel_modal")}>Add Channel</.button>
+        <div class="px-4 py-2 border-b border-slate-50 flex flex-row items-center">
+          <h3 class="text-lg font-bold">Channels</h3>
+          <.button
+            phx-click={show_modal("add_channel_modal")}
+            class="bg-transparent hover:bg-transparent p-0"
+          >
+            <Heroicons.plus_circle solid class="h-5 w-5" />
+          </.button>
         </div>
         <div class="flex flex-col flex-1 py-2 gap-2 overflow-y-scroll">
           <%= for channel <- @channels do %>
@@ -46,13 +52,24 @@ defmodule AppWeb.ChannelLive do
         </.simple_form>
       </div>
 
-      <.modal id="add_channel_modal" show={@adding_new_channel}>
+      <.modal
+        id="add_channel_modal"
+        show={@adding_new_channel}
+        container_class="bg-slate-800 text-white"
+        background_class="bg-black opacity-80"
+      >
         <.simple_form
           for={@add_channel_form}
           phx-submit="create_channel"
           phx-change="validate_channel"
+          container_class="bg-slate-800 text-white"
         >
-          <.input field={@add_channel_form[:name]} label="Channel Name" />
+          <.input
+            field={@add_channel_form[:name]}
+            label="Channel Name"
+            label_class="text-white"
+            class="bg-slate-800 text-white"
+          />
           <:actions>
             <.button>Submit</.button>
           </:actions>
