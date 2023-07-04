@@ -26,9 +26,13 @@ defmodule AppWeb.ChannelLive do
       </aside>
 
       <div class="flex flex-col h-full flex-1 bg-slate-800 text-white">
-        <div class="flex flex-col-reverse flex-1 overflow-y-scroll">
+        <div
+          class="flex flex-col-reverse flex-1 overflow-y-scroll"
+          id="chat-messages"
+          phx-update="prepend"
+        >
           <%= for message <- @messages do %>
-            <div class="px-4 font-sans">
+            <div id={"message-#{message.id}"} class="px-4 font-sans">
               <%= message.text %>
             </div>
           <% end %>
@@ -86,7 +90,7 @@ defmodule AppWeb.ChannelLive do
         adding_new_channel: false
       )
 
-    {:ok, socket}
+    {:ok, socket, temporary_assigns: [messages: []]}
   end
 
   def handle_params(%{"id" => channel_id}, _uri, socket) do
@@ -140,7 +144,7 @@ defmodule AppWeb.ChannelLive do
       ) do
     socket =
       if message.channel_id == socket.assigns.channel_id do
-        socket |> assign(:messages, [message | socket.assigns.messages])
+        socket |> assign(:messages, [message])
       else
         socket
       end
