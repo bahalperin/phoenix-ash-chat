@@ -46,11 +46,22 @@ defmodule App.Chat.Message do
 
       change relate_actor(:sender)
     end
+
+    read :list do
+      argument :channel_id, :uuid do
+        allow_nil? false
+      end
+
+      pagination offset?: true, default_limit: 50
+      prepare build(sort: [created_at: :desc])
+
+      filter expr(channel_id == ^arg(:channel_id))
+    end
   end
 
   code_interface do
     define_for App.Chat
     define :send, action: :send
-    define :read_all, action: :read
+    define :list, action: :list, args: [:channel_id]
   end
 end

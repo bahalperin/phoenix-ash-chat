@@ -38,24 +38,46 @@ defmodule AppWeb.ChannelLive do
         <%= if @channel do %>
           <div
             class="flex flex-col-reverse flex-1 overflow-y-scroll"
-            id={"#{@channel.id}-chat-messages"}
-            phx-update="prepend"
+            id="chat-messages"
+            phx-update="stream"
           >
-            <%= for message <- @messages do %>
-              <div id={"message-#{message.id}"} class="px-4 font-sans">
-                <%= message.text %>
-              </div>
-            <% end %>
+            <div
+              id="infinite_scroll_marker"
+              phx-hook="InfiniteScroll"
+              data-event-name="load_more_messages"
+              class="order-1"
+            />
+            <div
+              :for={{dom_id, message} <- @streams.messages}
+              id={dom_id}
+              class="px-4"
+              phx-hook="Message"
+              data-user-id={@current_user.id}
+              data-sender-id={message.sender_id}
+              data-created-at={message.created_at}
+            >
+              <%= message.text %>
+            </div>
           </div>
           <.simple_form
             for={@message_form}
+            id="message-form"
             phx-submit="send_message"
+            phx-hook="MessageForm"
             container_class="p-4 bg-slate-800"
           >
             <.input
+              id="message-input"
               field={@message_form[:text]}
               placeholder={"Message ##{@channel.name}"}
               class="bg-slate-800 text-white"
+            />
+
+            <.input
+              id="channel_input"
+              field={@message_form[:channel_id]}
+              value={@channel.id}
+              type="hidden"
             />
           </.simple_form>
         <% end %>
@@ -96,20 +118,18 @@ defmodule AppWeb.ChannelLive do
     channel_id = params["id"] || nil
     current_channel = channels |> Enum.find(fn channel -> channel.id == channel_id end)
 
-    current_channel =
-      if current_channel do
-        Ash.Api.load!(Channel, current_channel, :messages)
-      else
-        nil
-      end
-
     socket =
       socket
       |> assign(
+        page: 0,
         channel: current_channel,
         channels: channels,
-        messages: if(current_channel, do: current_channel.messages, else: []),
-        message_form: AshPhoenix.Form.for_create(Message, :send) |> to_form(),
+        message_form:
+          AshPhoenix.Form.for_create(Message, :send,
+            api: App.Chat,
+            actor: socket.assigns.current_user
+          )
+          |> to_form(),
         add_channel_form:
           AshPhoenix.Form.for_create(Channel, :create,
             api: App.Chat,
@@ -118,7 +138,7 @@ defmodule AppWeb.ChannelLive do
           |> to_form()
       )
 
-    {:ok, socket, temporary_assigns: [messages: []]}
+    {:ok, socket}
   end
 
   def handle_params(params, _uri, socket) do
@@ -127,29 +147,34 @@ defmodule AppWeb.ChannelLive do
     current_channel =
       socket.assigns.channels |> Enum.find(fn channel -> channel.id == channel_id end)
 
-    current_channel =
-      if current_channel do
-        Ash.Api.load!(Channel, current_channel, :messages)
-      else
-        nil
-      end
-
     socket =
       socket
-      |> assign(
-        channel: current_channel,
-        messages: if(current_channel, do: current_channel.messages, else: [])
+      |> assign(channel: current_channel)
+      |> stream(
+        :messages,
+        if(current_channel, do: Message.list!(channel_id, page: [offset: 0]).results, else: [])
       )
 
     {:noreply, socket}
   end
 
   def handle_event("send_message", %{"form" => params}, socket) do
-    Message.send(%{text: params["text"], channel_id: socket.assigns.channel.id},
-      actor: socket.assigns.current_user
-    )
+    case AshPhoenix.Form.submit(socket.assigns.message_form, params: params) do
+      {:ok, _message} ->
+        {:noreply,
+         socket
+         |> assign(
+           message_form:
+             AshPhoenix.Form.for_create(Message, :send,
+               api: App.Chat,
+               actor: socket.assigns.current_user
+             )
+             |> to_form()
+         )}
 
-    {:noreply, socket |> push_patch(to: ~p"/channel/#{socket.assigns.channel.id}", replace: true)}
+      {:error, form} ->
+        {:noreply, socket |> assign(message_form: form)}
+    end
   end
 
   def handle_event("create_channel", %{"form" => params}, socket) do
@@ -167,6 +192,19 @@ defmodule AppWeb.ChannelLive do
     {:noreply, assign(socket, add_channel_form: form)}
   end
 
+  def handle_event("load_more_messages", _params, socket) do
+    page = socket.assigns.page + 1
+
+    messages =
+      Message.list!(socket.assigns.channel.id, page: [offset: page * 50, limit: 50]).results
+
+    socket =
+      Enum.reduce(messages, socket, fn m, acc -> acc |> stream_insert(:messages, m) end)
+      |> assign(page: page)
+
+    {:noreply, socket}
+  end
+
   def handle_info(
         %Phoenix.Socket.Broadcast{
           topic: "message:created",
@@ -176,7 +214,7 @@ defmodule AppWeb.ChannelLive do
       ) do
     socket =
       if message.channel_id == socket.assigns.channel.id do
-        socket |> assign(:messages, [message])
+        socket |> stream_insert(:messages, message, at: 0)
       else
         socket
       end
