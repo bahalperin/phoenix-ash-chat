@@ -2,6 +2,7 @@ defmodule AppWeb.ChannelLive do
   use AppWeb, :live_view
 
   alias App.Chat.Channel
+  alias App.Chat.ChannelMember
   alias App.Chat.Message
   alias AppWeb.Components.Chat, as: Components
 
@@ -65,6 +66,8 @@ defmodule AppWeb.ChannelLive do
   def handle_params(%{"id" => channel_id}, _uri, socket) do
     current_channel =
       socket.assigns.channels |> Enum.find(fn channel -> channel.id == channel_id end)
+
+    ChannelMember.read_channel(current_channel.current_member)
 
     socket =
       socket
