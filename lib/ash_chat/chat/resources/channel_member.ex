@@ -20,11 +20,12 @@ defmodule App.Chat.ChannelMember do
     defaults [:create, :read, :destroy]
 
     read :current do
+      prepare build(load: [:unread_count])
       filter expr(user_id == ^actor(:id))
     end
 
     update :read_channel do
-      change set_attribute(:last_read_at, DateTime.utc_now())
+      change set_attribute(:last_read_at, &DateTime.utc_now/0)
     end
   end
 
@@ -32,5 +33,18 @@ defmodule App.Chat.ChannelMember do
     define_for App.Chat
 
     define :read_channel, action: :read_channel
+  end
+
+  calculations do
+    calculate :unread_count,
+              :integer,
+              expr(
+                fragment(
+                  "select count(*) from message where channel_id = ? and created_at > ? and sender_id != ?",
+                  channel_id,
+                  last_read_at,
+                  user_id
+                )
+              )
   end
 end

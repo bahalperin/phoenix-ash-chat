@@ -42,6 +42,7 @@ defmodule App.Chat.Channel do
     read :by_id do
       argument :id, :uuid, allow_nil?: false
       get? true
+      prepare build(load: [:members, :current_member])
       filter expr(id == ^arg(:id))
     end
 

@@ -64,17 +64,22 @@ defmodule AppWeb.ChannelLive do
   end
 
   def handle_params(%{"id" => channel_id}, _uri, socket) do
-    current_channel =
-      socket.assigns.channels |> Enum.find(fn channel -> channel.id == channel_id end)
+    socket =
+      assign(socket,
+        channel: socket.assigns.channels |> Enum.find(fn c -> c.id == channel_id end)
+      )
 
-    ChannelMember.read_channel(current_channel.current_member)
+    ChannelMember.read_channel!(current_channel(socket).current_member)
 
     socket =
       socket
-      |> assign(channel: current_channel)
+      |> refresh_channel(channel_id)
       |> stream(
         :messages,
-        if(current_channel, do: Message.list!(channel_id, page: [offset: 0]).results, else: [])
+        if(current_channel(socket),
+          do: Message.list!(channel_id, page: [offset: 0]).results,
+          else: []
+        )
       )
 
     {:noreply, socket}
@@ -138,12 +143,19 @@ defmodule AppWeb.ChannelLive do
         },
         socket
       ) do
+    if message.channel_id == socket.assigns.channel.id do
+      ChannelMember.read_channel!(socket.assigns.channel.current_member)
+    end
+
     socket =
       if message.channel_id == socket.assigns.channel.id do
         socket |> stream_insert(:messages, message, at: 0)
       else
         socket
       end
+
+    socket =
+      refresh_channel(socket, message.channel_id)
 
     {:noreply, socket}
   end
@@ -160,6 +172,28 @@ defmodule AppWeb.ChannelLive do
 
     {:noreply, socket}
   end
+
+  defp refresh_channel(socket, id) do
+    updated_channel = Channel.get_by_id!(id, actor: current_user(socket))
+
+    updated_channels =
+      socket.assigns.channels
+      |> Enum.map(fn c -> if c.id == id, do: updated_channel, else: c end)
+
+    socket =
+      assign(socket,
+        channels: updated_channels,
+        channel:
+          if(updated_channel.id == current_channel(socket).id,
+            do: updated_channel,
+            else: current_channel(socket)
+          )
+      )
+
+    socket
+  end
+
+  defp current_channel(socket), do: socket.assigns.channel
 
   defp current_user(socket), do: socket.assigns.current_user
 end
