@@ -19,11 +19,12 @@ defmodule App.Chat.Channel do
   end
 
   relationships do
-    many_to_many :members, App.Account.User do
-      through App.Chat.ChannelMember
-      source_attribute_on_join_resource :channel_id
-      destination_attribute_on_join_resource :user_id
+    has_many :members, App.Chat.ChannelMember do
       writable? true
+    end
+
+    has_one :current_member, App.Chat.ChannelMember do
+      read_action :current
     end
 
     has_many :messages, App.Chat.Message, sort: [created_at: :desc]
@@ -44,6 +45,11 @@ defmodule App.Chat.Channel do
       filter expr(id == ^arg(:id))
     end
 
+    read :read_all do
+      prepare build(sort: [:name], load: [:members, :current_member])
+      filter expr(exists(members, user_id == ^actor(:id)))
+    end
+
     create :create do
       accept [:name]
 
@@ -56,7 +62,7 @@ defmodule App.Chat.Channel do
   code_interface do
     define_for App.Chat
     define :create, action: :create
-    define :read_all, action: :read
+    define :read_all, action: :read_all
     define :get_by_id, args: [:id], action: :by_id
   end
 end

@@ -14,5 +14,9 @@ defmodule App.Chat.ChannelMember do
 
   actions do
     defaults [:create, :read, :destroy]
+
+    read :current do
+      filter expr(user_id == ^actor(:id))
+    end
   end
 end

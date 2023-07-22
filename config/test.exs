@@ -6,7 +6,7 @@ import Config
 # to provide built-in test partitioning in CI environment.
 # Run `mix help test` for more information.
 config :ash_chat, App.Repo,
-  username: "postgres",
+  username: "benhalperin",
   password: "postgres",
   hostname: "localhost",
   database: "ash_chat_test#{System.get_env("MIX_TEST_PARTITION")}",
@@ -22,6 +22,9 @@ config :ash_chat, AppWeb.Endpoint,
 
 # In test we don't send emails.
 config :ash_chat, App.Mailer, adapter: Swoosh.Adapters.Test
+
+config :ash, :disable_async?, true
+config :ash, :missed_notifications, :ignore
 
 # Disable swoosh api client as it is only required for production adapters.
 config :swoosh, :api_client, false

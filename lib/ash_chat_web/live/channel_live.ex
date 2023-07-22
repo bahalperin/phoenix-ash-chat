@@ -37,7 +37,7 @@ defmodule AppWeb.ChannelLive do
     AppWeb.Endpoint.subscribe("message:created")
     AppWeb.Endpoint.subscribe("channel:created")
 
-    channels = Channel.read_all!()
+    channels = Channel.read_all!(actor: current_user(socket))
 
     socket =
       socket
@@ -157,4 +157,6 @@ defmodule AppWeb.ChannelLive do
 
     {:noreply, socket}
   end
+
+  defp current_user(socket), do: socket.assigns.current_user
 end
