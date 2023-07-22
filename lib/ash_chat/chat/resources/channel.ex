@@ -48,6 +48,7 @@ defmodule App.Chat.Channel do
 
     read :read_all do
       prepare build(sort: [:name], load: [:members, :current_member])
+      filter expr(exists(members, user_id == ^actor(:id)))
     end
 
     create :create do
