@@ -27,6 +27,14 @@ defmodule App.Chat.Channel do
       read_action :current
     end
 
+    many_to_many :users, App.Account.User do
+      through App.Chat.ChannelMember
+      source_attribute_on_join_resource :channel_id
+      destination_attribute_on_join_resource :user_id
+      writable? true
+      private? false
+    end
+
     has_many :messages, App.Chat.Message, sort: [created_at: :desc]
   end
 
@@ -48,7 +56,6 @@ defmodule App.Chat.Channel do
 
     read :read_all do
       prepare build(sort: [:name], load: [:members, :current_member])
-      filter expr(exists(members, user_id == ^actor(:id)))
     end
 
     create :create do
@@ -56,13 +63,19 @@ defmodule App.Chat.Channel do
 
       validate match(:name, ~r/^[[:graph:]]+$/), message: "No whitespace allowed in channel name"
 
-      change relate_actor(:members)
+      change relate_actor(:users)
+    end
+
+    update :join do
+      change relate_actor(:users)
     end
   end
 
   code_interface do
     define_for App.Chat
     define :create, action: :create
+    define :update, action: :update
+    define :join, action: :join
     define :read_all, action: :read_all
     define :get_by_id, args: [:id], action: :by_id
   end
