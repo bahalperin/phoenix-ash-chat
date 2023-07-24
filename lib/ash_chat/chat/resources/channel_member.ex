@@ -1,14 +1,35 @@
 defmodule App.Chat.ChannelMember do
   use Ash.Resource,
-    data_layer: AshPostgres.DataLayer
+    data_layer: AshPostgres.DataLayer,
+    notifiers: [Ash.Notifier.PubSub]
 
   attributes do
+    uuid_primary_key :id
     attribute :last_read_at, :utc_datetime_usec
+
+    attribute :channel_id, :uuid
+    attribute :user_id, :uuid
+  end
+
+  pub_sub do
+    module AppWeb.Endpoint
+    prefix "channel_member"
+
+    publish :join_channel, "joined"
   end
 
   relationships do
-    belongs_to :channel, App.Chat.Channel, primary_key?: true, allow_nil?: false
-    belongs_to :user, App.Account.User, primary_key?: true, allow_nil?: false
+    belongs_to :channel, App.Chat.Channel,
+      primary_key?: true,
+      allow_nil?: false,
+      writable?: true,
+      private?: false
+
+    belongs_to :user, App.Account.User,
+      primary_key?: true,
+      allow_nil?: false,
+      writable?: true,
+      private?: false
   end
 
   postgres do
@@ -24,6 +45,12 @@ defmodule App.Chat.ChannelMember do
       filter expr(user_id == ^actor(:id))
     end
 
+    create :join_channel do
+      accept [:channel_id]
+
+      change set_attribute(:user_id, actor(:id))
+    end
+
     update :read_channel do
       change set_attribute(:last_read_at, &DateTime.utc_now/0)
     end
@@ -33,6 +60,7 @@ defmodule App.Chat.ChannelMember do
     define_for App.Chat
 
     define :read_channel, action: :read_channel
+    define :join_channel, action: :join_channel
   end
 
   calculations do

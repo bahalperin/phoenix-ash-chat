@@ -24,8 +24,12 @@ defmodule AppWeb.ChannelLive do
 
       <div class="flex flex-col h-full flex-1 bg-slate-800 text-white">
         <%= if @channel do %>
-          <Components.message_list messages={@streams.messages} current_user={@current_user} />
-          <Components.message_form form={@message_form} channel={@channel} />
+          <%= if @channel.current_member do %>
+            <Components.message_list messages={@streams.messages} current_user={@current_user} />
+            <Components.message_form form={@message_form} channel={@channel} />
+          <% else %>
+            <.button phx-click="join_channel">Join</.button>
+          <% end %>
         <% end %>
       </div>
 
@@ -37,6 +41,7 @@ defmodule AppWeb.ChannelLive do
   def mount(_params, _session, socket) do
     AppWeb.Endpoint.subscribe("message:created")
     AppWeb.Endpoint.subscribe("channel:created")
+    AppWeb.Endpoint.subscribe("channel_member:joined")
 
     channels = Channel.read_all!(actor: current_user(socket))
 
@@ -69,7 +74,9 @@ defmodule AppWeb.ChannelLive do
         channel: socket.assigns.channels |> Enum.find(fn c -> c.id == channel_id end)
       )
 
-    ChannelMember.read_channel!(current_channel(socket).current_member)
+    if current_channel(socket).current_member do
+      ChannelMember.read_channel!(current_channel(socket).current_member)
+    end
 
     socket =
       socket
@@ -111,11 +118,25 @@ defmodule AppWeb.ChannelLive do
   def handle_event("create_channel", %{"form" => params}, socket) do
     case AshPhoenix.Form.submit(socket.assigns.add_channel_form, params: params) do
       {:ok, channel} ->
+        ChannelMember.join_channel(%{channel_id: channel.id}, actor: current_user(socket))
         {:noreply, socket |> push_navigate(to: ~p"/channel/#{channel.id}")}
 
       {:error, form} ->
         {:noreply, socket |> assign(add_chanel_form: form)}
     end
+  end
+
+  def handle_event("join_channel", _, socket) do
+    channel = current_channel(socket)
+
+    ChannelMember.join_channel(
+      %{
+        channel_id: channel.id
+      },
+      actor: current_user(socket)
+    )
+
+    {:noreply, socket |> push_navigate(to: ~p"/channel/#{channel.id}", replace: true)}
   end
 
   def handle_event("validate_channel", %{"form" => params}, socket) do
@@ -168,7 +189,20 @@ defmodule AppWeb.ChannelLive do
         socket
       ) do
     socket =
-      socket |> assign(:channels, [channel | socket.assigns.channels])
+      socket |> assign(:channels, Channel.read_all!(actor: current_user(socket)))
+
+    {:noreply, socket}
+  end
+
+  def handle_info(
+        %Phoenix.Socket.Broadcast{
+          topic: "channel_member:joined",
+          payload: %Ash.Notifier.Notification{data: channel_member}
+        },
+        socket
+      ) do
+    socket =
+      socket |> refresh_channel(channel_member.channel_id)
 
     {:noreply, socket}
   end

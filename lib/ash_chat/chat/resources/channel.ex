@@ -1,7 +1,7 @@
 defmodule App.Chat.Channel do
   use Ash.Resource,
     data_layer: AshPostgres.DataLayer,
-    extensions: [Ash.Notifier.PubSub]
+    notifiers: [Ash.Notifier.PubSub]
 
   attributes do
     uuid_primary_key :id
@@ -12,7 +12,7 @@ defmodule App.Chat.Channel do
   end
 
   pub_sub do
-    module App.PubSub
+    module AppWeb.Endpoint
     prefix "channel"
 
     publish :create, ["created", [:id, nil]]
@@ -48,15 +48,12 @@ defmodule App.Chat.Channel do
 
     read :read_all do
       prepare build(sort: [:name], load: [:members, :current_member])
-      filter expr(exists(members, user_id == ^actor(:id)))
     end
 
     create :create do
       accept [:name]
 
       validate match(:name, ~r/^[[:graph:]]+$/), message: "No whitespace allowed in channel name"
-
-      change relate_actor(:members)
     end
   end
 
