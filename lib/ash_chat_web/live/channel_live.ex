@@ -24,12 +24,8 @@ defmodule AppWeb.ChannelLive do
 
       <div class="flex flex-col h-full flex-1 bg-slate-800 text-white">
         <%= if @channel do %>
-          <%= if @channel.current_member do %>
-            <Components.message_list messages={@streams.messages} current_user={@current_user} />
-            <Components.message_form form={@message_form} channel={@channel} />
-          <% else %>
-            <.button phx-click="join_channel" phx-value-channel-id={@channel.id}>Join</.button>
-          <% end %>
+          <Components.message_list messages={@streams.messages} current_user={@current_user} />
+          <Components.message_form form={@message_form} channel={@channel} />
         <% end %>
       </div>
 
@@ -73,9 +69,7 @@ defmodule AppWeb.ChannelLive do
         channel: socket.assigns.channels |> Enum.find(fn c -> c.id == channel_id end)
       )
 
-    if current_channel(socket).current_member do
-      ChannelMember.read_channel!(current_channel(socket).current_member)
-    end
+    ChannelMember.read_channel!(current_channel(socket).current_member)
 
     socket =
       socket
@@ -122,13 +116,6 @@ defmodule AppWeb.ChannelLive do
       {:error, form} ->
         {:noreply, socket |> assign(add_chanel_form: form)}
     end
-  end
-
-  def handle_event("join_channel", %{"channel-id" => channel_id}, socket) do
-    Channel.get_by_id!(channel_id, actor: current_user(socket))
-    |> Channel.join!(%{}, actor: current_user(socket))
-
-    {:noreply, socket |> push_navigate(to: ~p"/channel/#{channel_id}", replace: true)}
   end
 
   def handle_event("validate_channel", %{"form" => params}, socket) do

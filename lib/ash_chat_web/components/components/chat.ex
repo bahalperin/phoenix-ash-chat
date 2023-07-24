@@ -19,9 +19,10 @@ defmodule AppWeb.Components.Chat do
             ]}
           >
             # <%= channel.name %>
-            <%= if channel.current_member && channel.current_member.unread_count > 0 do %>
+            <%= if channel.current_member.unread_count > 0 do %>
               <span class="bg-red-100 text-red-800 text-sm font-medium mr-2 px-2.5 py-0.5 rounded dark:bg-red-900 dark:text-red-300 ml-1">
                 <%= channel.current_member.unread_count %>
+                
               </span>
             <% end %>
           </.link>
