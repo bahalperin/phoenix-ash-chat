@@ -1,4 +1,4 @@
-name: Elixir CI
+name: Deploy
 
 # Define workflow that runs when changes are pushed to the
 # `main` branch or pushed to a PR branch that targets the `main`
@@ -100,3 +100,14 @@ jobs:
     # Step: Execute the tests.
     - name: Run tests
       run: mix test
+
+  deploy:
+    name: Deploy
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - run: flyctl deploy --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
