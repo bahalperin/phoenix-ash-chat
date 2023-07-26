@@ -184,7 +184,7 @@ defmodule AppWeb.ChannelLive do
   def handle_info(
         %Phoenix.Socket.Broadcast{
           topic: "channel:created",
-          payload: %Ash.Notifier.Notification{data: channel}
+          payload: %Ash.Notifier.Notification{data: _channel}
         },
         socket
       ) do
