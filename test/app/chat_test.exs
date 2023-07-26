@@ -7,15 +7,15 @@ defmodule App.ChatTest do
     alias App.Chat.Channel
 
     @invalid_attrs %{name: 47}
-    @actor %{ id: "uuid"}
+    @actor %{id: "uuid"}
 
     test "create with valid data and actor creates channel" do
-      assert {:ok, %Channel{} = channel} = Channel.create(%{ name: "main" }, actor: @actor)
+      assert {:ok, %Channel{} = channel} = Channel.create(%{name: "main"}, actor: @actor)
     end
 
     test "create without an actor fails" do
       assert_raise Ash.Error.Forbidden.ApiRequiresActor, fn ->
-        Channel.create(%{ name: "main" })
+        Channel.create(%{name: "main"})
       end
     end
 

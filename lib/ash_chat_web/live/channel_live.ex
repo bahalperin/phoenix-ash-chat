@@ -75,7 +75,9 @@ defmodule AppWeb.ChannelLive do
       )
 
     if current_channel(socket).current_member do
-      ChannelMember.read_channel!(current_channel(socket).current_member, actor: current_user(socket))
+      ChannelMember.read_channel!(current_channel(socket).current_member,
+        actor: current_user(socket)
+      )
     end
 
     socket =
@@ -148,7 +150,10 @@ defmodule AppWeb.ChannelLive do
     page = socket.assigns.page + 1
 
     messages =
-      Message.list!(socket.assigns.channel.id, page: [offset: page * 50, limit: 50], actor: current_user(socket)).results
+      Message.list!(socket.assigns.channel.id,
+        page: [offset: page * 50, limit: 50],
+        actor: current_user(socket)
+      ).results
 
     socket =
       Enum.reduce(messages, socket, fn m, acc -> acc |> stream_insert(:messages, m) end)
@@ -165,7 +170,9 @@ defmodule AppWeb.ChannelLive do
         socket
       ) do
     if message.channel_id == socket.assigns.channel.id do
-      ChannelMember.read_channel!(socket.assigns.channel.current_member, actor: current_user(socket))
+      ChannelMember.read_channel!(socket.assigns.channel.current_member,
+        actor: current_user(socket)
+      )
     end
 
     socket =
