@@ -25,7 +25,12 @@ defmodule AppWeb.ChannelLive do
       <div class="flex flex-col h-full flex-1 bg-slate-800 text-white">
         <%= if @channel do %>
           <%= if @channel.current_member do %>
-            <Components.message_list messages={@streams.messages} current_user={@current_user} />
+            <Components.message_list
+              messages={@streams.messages}
+              current_user={@current_user}
+              editing_message_id={@editing_message_id}
+              form={@edit_message_form}
+            />
             <Components.message_form form={@message_form} channel={@channel} />
           <% else %>
             <.button phx-click="join_channel">Join</.button>
@@ -40,6 +45,7 @@ defmodule AppWeb.ChannelLive do
 
   def mount(_params, _session, socket) do
     AppWeb.Endpoint.subscribe("message:created")
+    AppWeb.Endpoint.subscribe("message:updated")
     AppWeb.Endpoint.subscribe("message:deleted")
     AppWeb.Endpoint.subscribe("channel:created")
     AppWeb.Endpoint.subscribe("channel_member:joined")
@@ -58,12 +64,14 @@ defmodule AppWeb.ChannelLive do
             actor: socket.assigns.current_user
           )
           |> to_form(),
+        edit_message_form: nil,
         add_channel_form:
           AshPhoenix.Form.for_create(Channel, :create,
             api: App.Chat,
             actor: socket.assigns.current_user
           )
-          |> to_form()
+          |> to_form(),
+        editing_message_id: nil
       )
 
     {:ok, socket}
@@ -115,6 +123,21 @@ defmodule AppWeb.ChannelLive do
 
       {:error, form} ->
         {:noreply, socket |> assign(message_form: form)}
+    end
+  end
+
+  def handle_event("edit_message", %{"form" => params}, socket) do
+    case AshPhoenix.Form.submit(socket.assigns.edit_message_form, params: params) do
+      {:ok, _message} ->
+        {:noreply,
+         socket
+         |> assign(
+           editing_message_id: nil,
+           edit_message_form: nil
+         )}
+
+      {:error, form} ->
+        {:noreply, socket |> assign(edit_message_form: form)}
     end
   end
 
@@ -170,6 +193,19 @@ defmodule AppWeb.ChannelLive do
     {:noreply, socket}
   end
 
+  def handle_event("start_editing_message", %{"message-id" => message_id}, socket) do
+    message = Message.get_by_id!(message_id, actor: current_user(socket))
+
+    {:noreply,
+     socket
+     |> assign(
+       editing_message_id: message_id,
+       edit_message_form:
+         AshPhoenix.Form.for_action(message, :edit, actor: current_user(socket), api: App.Chat)
+     )
+     |> stream_insert(:messages, message, at: -1)}
+  end
+
   def handle_info(
         %Phoenix.Socket.Broadcast{
           topic: "message:created",
@@ -192,6 +228,23 @@ defmodule AppWeb.ChannelLive do
 
     socket =
       refresh_channel(socket, message.channel_id)
+
+    {:noreply, socket}
+  end
+
+  def handle_info(
+        %Phoenix.Socket.Broadcast{
+          topic: "message:updated",
+          payload: %Ash.Notifier.Notification{data: message}
+        },
+        socket
+      ) do
+    socket =
+      if message.channel_id == socket.assigns.channel.id do
+        socket |> stream_insert(:messages, message, at: -1)
+      else
+        socket
+      end
 
     {:noreply, socket}
   end

@@ -62,11 +62,32 @@ defmodule AppWeb.Components.Chat do
               class="text-sm text-gray-300 hidden group-hover:block"
             />
           </div>
-          <span><%= message.text %></span>
+
+          <%= if @editing_message_id == message.id do %>
+            <.simple_form
+              :let={f}
+              for={@form}
+              id="edit-message-form"
+              phx-submit="edit_message"
+              container_class="pb-4 bg-transparent"
+            >
+              <.input id="edit-message-input" field={f[:text]} class="bg-slate-800 text-white" />
+            </.simple_form>
+          <% else %>
+            <div class="flex flex-row items-end gap-2">
+              <span><%= message.text %></span>
+              <%= if message.edited do %>
+                <span class="text-sm text-gray-300">(edited)</span>
+              <% end %>
+            </div>
+          <% end %>
         </div>
 
         <div class="hidden group-hover:block">
-          <%= if @current_user.id == message.sender.id do %>
+          <%= if @current_user.id == message.sender.id && message.id != @editing_message_id do %>
+            <.button phx-click="start_editing_message" phx-value-message-id={message.id}>
+              Edit
+            </.button>
             <.button phx-click="delete_message" phx-value-message-id={message.id}>
               X
             </.button>

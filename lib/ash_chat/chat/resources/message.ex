@@ -13,6 +13,10 @@ defmodule App.Chat.Message do
     attribute :text, :string do
       allow_nil? false
     end
+
+    attribute :edited, :boolean do
+      default false
+    end
   end
 
   relationships do
@@ -32,6 +36,7 @@ defmodule App.Chat.Message do
     prefix "message"
 
     publish :send, ["created", [:id, nil]]
+    publish :edit, ["updated", [:id, nil]]
     publish :destroy, ["deleted", [:id, nil]]
   end
 
@@ -49,7 +54,7 @@ defmodule App.Chat.Message do
     end
 
     policy action_type(:update) do
-      authorize_if always()
+      authorize_if relates_to_actor_via(:sender)
     end
   end
 
@@ -74,6 +79,12 @@ defmodule App.Chat.Message do
       change relate_actor(:sender)
     end
 
+    update :edit do
+      accept [:text]
+
+      change set_attribute(:edited, true)
+    end
+
     read :list do
       argument :channel_id, :uuid do
         allow_nil? false
@@ -90,6 +101,7 @@ defmodule App.Chat.Message do
     define_for App.Chat
     define :get_by_id, args: [:id], action: :by_id
     define :send, action: :send
+    define :edit, action: :edit
     define :list, action: :list, args: [:channel_id]
     define :delete, action: :destroy
   end
