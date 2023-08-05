@@ -47,7 +47,7 @@ defmodule AppWeb.Components.Chat do
       <div
         :for={{dom_id, message} <- @messages}
         id={dom_id}
-        class="px-4 group hover:bg-slate-900"
+        class="px-4 group hover:bg-slate-900 flex flex-row justify-between"
         phx-hook="Message"
         data-user-id={@current_user.id}
         data-sender-id={message.sender_id}
@@ -63,6 +63,14 @@ defmodule AppWeb.Components.Chat do
             />
           </div>
           <span><%= message.text %></span>
+        </div>
+
+        <div class="hidden group-hover:block">
+          <%= if @current_user.id == message.sender.id do %>
+            <.button phx-click="delete_message" phx-value-message-id={message.id}>
+              X
+            </.button>
+          <% end %>
         </div>
       </div>
     </div>

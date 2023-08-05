@@ -40,6 +40,7 @@ defmodule AppWeb.ChannelLive do
 
   def mount(_params, _session, socket) do
     AppWeb.Endpoint.subscribe("message:created")
+    AppWeb.Endpoint.subscribe("message:deleted")
     AppWeb.Endpoint.subscribe("channel:created")
     AppWeb.Endpoint.subscribe("channel_member:joined")
 
@@ -162,6 +163,13 @@ defmodule AppWeb.ChannelLive do
     {:noreply, socket}
   end
 
+  def handle_event("delete_message", %{"message-id" => message_id}, socket) do
+    message = Message.get_by_id!(message_id, actor: current_user(socket))
+    Message.delete!(message, actor: current_user(socket))
+
+    {:noreply, socket}
+  end
+
   def handle_info(
         %Phoenix.Socket.Broadcast{
           topic: "message:created",
@@ -184,6 +192,23 @@ defmodule AppWeb.ChannelLive do
 
     socket =
       refresh_channel(socket, message.channel_id)
+
+    {:noreply, socket}
+  end
+
+  def handle_info(
+        %Phoenix.Socket.Broadcast{
+          topic: "message:deleted",
+          payload: %Ash.Notifier.Notification{data: message}
+        },
+        socket
+      ) do
+    socket =
+      if message.channel_id == socket.assigns.channel.id do
+        socket |> stream_delete(:messages, message)
+      else
+        socket
+      end
 
     {:noreply, socket}
   end

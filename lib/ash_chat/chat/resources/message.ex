@@ -1,5 +1,6 @@
 defmodule App.Chat.Message do
   use Ash.Resource,
+    authorizers: [Ash.Policy.Authorizer],
     data_layer: AshPostgres.DataLayer,
     notifiers: [Ash.Notifier.PubSub]
 
@@ -14,13 +15,6 @@ defmodule App.Chat.Message do
     end
   end
 
-  pub_sub do
-    module AppWeb.Endpoint
-    prefix "message"
-
-    publish :send, ["created", [:id, nil]]
-  end
-
   relationships do
     belongs_to :channel, App.Chat.Channel do
       allow_nil? false
@@ -33,6 +27,32 @@ defmodule App.Chat.Message do
     end
   end
 
+  pub_sub do
+    module AppWeb.Endpoint
+    prefix "message"
+
+    publish :send, ["created", [:id, nil]]
+    publish :destroy, ["deleted", [:id, nil]]
+  end
+
+  policies do
+    policy action_type(:destroy) do
+      authorize_if relates_to_actor_via(:sender)
+    end
+
+    policy action_type(:read) do
+      authorize_if always()
+    end
+
+    policy action_type(:create) do
+      authorize_if always()
+    end
+
+    policy action_type(:update) do
+      authorize_if always()
+    end
+  end
+
   postgres do
     table "message"
     repo App.Repo
@@ -40,6 +60,13 @@ defmodule App.Chat.Message do
 
   actions do
     defaults [:create, :read, :update, :destroy]
+
+    read :by_id do
+      argument :id, :uuid, allow_nil?: false
+      get? true
+      prepare build(load: [:sender])
+      filter expr(id == ^arg(:id))
+    end
 
     create :send do
       accept [:text, :channel_id]
@@ -61,7 +88,9 @@ defmodule App.Chat.Message do
 
   code_interface do
     define_for App.Chat
+    define :get_by_id, args: [:id], action: :by_id
     define :send, action: :send
     define :list, action: :list, args: [:channel_id]
+    define :delete, action: :destroy
   end
 end
