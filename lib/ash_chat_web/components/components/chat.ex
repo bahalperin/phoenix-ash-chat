@@ -33,7 +33,11 @@ defmodule AppWeb.Components.Chat do
 
   def message_list(assigns) do
     ~H"""
-    <div class="flex flex-col-reverse flex-1 overflow-y-auto" id="chat-messages" phx-update="stream">
+    <div
+      class="flex flex-col-reverse flex-1 gap-1 overflow-y-auto"
+      id="chat-messages"
+      phx-update="stream"
+    >
       <div
         id="infinite_scroll_marker"
         phx-hook="InfiniteScroll"
@@ -43,13 +47,16 @@ defmodule AppWeb.Components.Chat do
       <div
         :for={{dom_id, message} <- @messages}
         id={dom_id}
-        class="px-4"
+        class="px-4 hover:bg-slate-900"
         phx-hook="Message"
         data-user-id={@current_user.id}
         data-sender-id={message.sender_id}
         data-created-at={message.created_at}
       >
-        <%= message.text %>
+        <div class="flex flex-col">
+          <span class="font-bold"><%= message.sender.display_name %></span>
+          <span><%= message.text %></span>
+        </div>
       </div>
     </div>
     """

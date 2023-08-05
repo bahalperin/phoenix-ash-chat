@@ -53,7 +53,7 @@ defmodule App.Chat.Message do
       end
 
       pagination offset?: true, default_limit: 50
-      prepare build(sort: [created_at: :desc])
+      prepare build(sort: [created_at: :desc], load: [:sender])
 
       filter expr(channel_id == ^arg(:channel_id))
     end

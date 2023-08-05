@@ -9,6 +9,7 @@ defmodule App.Account.User do
     strategies do
       password :password do
         identity_field(:email)
+        register_action_accept([:display_name])
 
         resettable do
           sender(App.Account.User.Senders.SendPasswordResetEmail)
@@ -30,6 +31,11 @@ defmodule App.Account.User do
     uuid_primary_key :id
     attribute :email, :ci_string, allow_nil?: false
     attribute :hashed_password, :string, allow_nil?: false, sensitive?: true
+
+    attribute :display_name, :string do
+      allow_nil? false
+      default ""
+    end
   end
 
   postgres do

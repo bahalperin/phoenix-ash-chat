@@ -23,7 +23,9 @@ defmodule AppWeb.Router do
 
     get "/", PageController, :home
 
-    sign_in_route(on_mount: [{AppWeb.LiveUserAuth, :live_no_user}])
+    # sign_in_route(on_mount: [{AppWeb.LiveUserAuth, :live_no_user}])
+    live "/register", AuthLive.Index, :register
+    live "/sign-in", AuthLive.Index, :sign_in
     sign_out_route AuthController
     auth_routes_for App.Account.User, to: AuthController
     reset_route []
