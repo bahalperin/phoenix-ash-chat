@@ -24,9 +24,10 @@ import topbar from "../vendor/topbar"
 import { InfiniteScroll } from "./hooks/InfiniteScroll"
 import { MessageForm } from "./hooks/MessageForm"
 import { Message } from "./hooks/Message"
+import { LocalTime } from "./hooks/LocalTime"
 
 let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
-let liveSocket = new LiveSocket("/live", Socket, {params: {_csrf_token: csrfToken}, hooks: { Message, MessageForm, InfiniteScroll }})
+let liveSocket = new LiveSocket("/live", Socket, {params: {_csrf_token: csrfToken}, hooks: { Message, MessageForm, InfiniteScroll, LocalTime }})
 
 // Show progress bar on live navigation and form submits
 topbar.config({barColors: {0: "#29d"}, shadowColor: "rgba(0, 0, 0, .3)"})

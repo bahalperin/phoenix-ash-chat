@@ -47,14 +47,21 @@ defmodule AppWeb.Components.Chat do
       <div
         :for={{dom_id, message} <- @messages}
         id={dom_id}
-        class="px-4 hover:bg-slate-900"
+        class="px-4 group hover:bg-slate-900"
         phx-hook="Message"
         data-user-id={@current_user.id}
         data-sender-id={message.sender_id}
         data-created-at={message.created_at}
       >
         <div class="flex flex-col">
-          <span class="font-bold"><%= message.sender.display_name %></span>
+          <div class="flex flex-row items-end gap-2">
+            <span class="font-bold"><%= message.sender.display_name %></span>
+            <.local_datetime
+              id={"#{message.id}-sent-at"}
+              datetime={message.created_at}
+              class="text-sm text-gray-300 hidden group-hover:block"
+            />
+          </div>
           <span><%= message.text %></span>
         </div>
       </div>
