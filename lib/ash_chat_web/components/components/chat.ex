@@ -55,7 +55,7 @@ defmodule AppWeb.Components.Chat do
       >
         <div class="flex flex-col">
           <div class="flex flex-row items-end gap-2">
-            <span class="font-bold"><%= message.sender.display_name %></span>
+            <.user_name user={message.sender} %></.user_name>
             <.local_datetime
               id={"#{message.id}-sent-at"}
               datetime={message.created_at}
@@ -148,9 +148,13 @@ defmodule AppWeb.Components.Chat do
 
   def user_name(assigns) do
     ~H"""
-    <span class="font-bold">
-      <%= @user.display_name %>
-    </span>
+    <.link navigate={"/profile/#{@user.id}"} class="font-bold hover:underline">
+      <%= if @user.display_name != "" do %>
+        <%= @user.display_name %>
+      <% else %>
+        Unknown
+      <% end %>
+    </.link>
     """
   end
 

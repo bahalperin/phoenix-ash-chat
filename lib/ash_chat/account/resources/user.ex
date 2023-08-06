@@ -1,5 +1,6 @@
 defmodule App.Account.User do
   use Ash.Resource,
+    authorizers: [Ash.Policy.Authorizer],
     data_layer: AshPostgres.DataLayer,
     extensions: [AshAuthentication]
 
@@ -38,6 +39,24 @@ defmodule App.Account.User do
     end
   end
 
+  policies do
+    policy action_type(:destroy) do
+      authorize_if expr(id == ^actor(:id))
+    end
+
+    policy action_type(:read) do
+      authorize_if always()
+    end
+
+    policy action_type(:create) do
+      authorize_if always()
+    end
+
+    policy action_type(:update) do
+      authorize_if expr(id == ^actor(:id))
+    end
+  end
+
   postgres do
     table "users"
     repo App.Repo
@@ -47,6 +66,21 @@ defmodule App.Account.User do
     read :read do
       primary? true
     end
+
+    read :by_id do
+      argument :id, :uuid, allow_nil?: false
+      get? true
+      filter expr(id == ^arg(:id))
+    end
+
+    update :update do
+      accept [:display_name]
+    end
+  end
+
+  code_interface do
+    define_for App.Account
+    define :get_by_id, args: [:id], action: :by_id
   end
 
   identities do

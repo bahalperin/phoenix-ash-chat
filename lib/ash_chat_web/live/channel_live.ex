@@ -42,7 +42,7 @@ defmodule AppWeb.ChannelLive do
         <% end %>
       </div>
 
-      <aside class="flex flex-col w-48 h-full flex-0 border-l border-slate-50 bg-slate-600 text-white px-4 py-2">
+      <aside class="flex flex-col w-48 h-full flex-0 border-l border-slate-50 bg-slate-600 text-white px-4 py-2 gap-2">
         <%= if @channel && @channel.members do %>
           <%= for member <- @channel.members do %>
             <div class="flex flex-row items-center gap-2">

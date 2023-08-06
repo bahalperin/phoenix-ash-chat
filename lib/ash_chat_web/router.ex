@@ -23,7 +23,6 @@ defmodule AppWeb.Router do
 
     get "/", PageController, :home
 
-    # sign_in_route(on_mount: [{AppWeb.LiveUserAuth, :live_no_user}])
     live "/register", AuthLive.Index, :register
     live "/sign-in", AuthLive.Index, :sign_in
     sign_out_route AuthController
@@ -33,6 +32,7 @@ defmodule AppWeb.Router do
     ash_authentication_live_session :chat_authentication_required,
       on_mount: {AppWeb.LiveUserAuth, :live_user_required},
       layout: {AppWeb.Layouts, :chat} do
+      live "/profile/:id", ProfileLive
       live "/channel", ChannelLive
       live "/channel/:id", ChannelLive
     end
