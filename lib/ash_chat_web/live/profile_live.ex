@@ -1,7 +1,6 @@
 defmodule AppWeb.ProfileLive do
   use AppWeb, :live_view
 
-  alias App.Account
   alias App.Account.User
   alias AshPhoenix.Form
 

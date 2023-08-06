@@ -321,7 +321,6 @@ defmodule AppWeb.ChannelLive do
     {:noreply, socket}
   end
 
-  @impl true
   def handle_info(%Phoenix.Socket.Broadcast{event: "presence_diff", payload: diff}, socket) do
     {
       :noreply,
