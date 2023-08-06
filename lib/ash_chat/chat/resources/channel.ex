@@ -21,6 +21,7 @@ defmodule App.Chat.Channel do
   relationships do
     has_many :members, App.Chat.ChannelMember do
       writable? true
+      read_action :list
     end
 
     has_one :current_member, App.Chat.ChannelMember do

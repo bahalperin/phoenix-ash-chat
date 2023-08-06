@@ -19,7 +19,9 @@ defmodule App.Application do
       # Ash Auth
       {AshAuthentication.Supervisor, otp_app: :example},
       # Start the Endpoint (http/https)
-      AppWeb.Endpoint
+      AppWeb.Endpoint,
+      # Presence
+      App.Presence
       # Start a worker by calling: App.Worker.start_link(arg)
       # {App.Worker, arg}
     ]

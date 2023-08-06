@@ -145,4 +145,21 @@ defmodule AppWeb.Components.Chat do
     </.modal>
     """
   end
+
+  def user_name(assigns) do
+    ~H"""
+    <span class="font-bold">
+      <%= @user.display_name %>
+    </span>
+    """
+  end
+
+  def online_status(assigns) do
+    ~H"""
+    <div class={[
+      "rounded-full h-2 w-2",
+      if(@online, do: "bg-green-500", else: "bg-gray-100 border-gray-700")
+    ]} />
+    """
+  end
 end

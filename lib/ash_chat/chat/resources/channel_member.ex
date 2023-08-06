@@ -40,6 +40,10 @@ defmodule App.Chat.ChannelMember do
   actions do
     defaults [:create, :read, :destroy]
 
+    read :list do
+      prepare build(load: [:user])
+    end
+
     read :current do
       prepare build(load: [:unread_count])
       filter expr(user_id == ^actor(:id))

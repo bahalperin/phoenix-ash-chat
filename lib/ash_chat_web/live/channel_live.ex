@@ -4,7 +4,11 @@ defmodule AppWeb.ChannelLive do
   alias App.Chat.Channel
   alias App.Chat.ChannelMember
   alias App.Chat.Message
+  alias App.Presence
+  alias App.PubSub
   alias AppWeb.Components.Chat, as: Components
+
+  @presence "online:presence"
 
   def render(assigns) do
     ~H"""
@@ -38,12 +42,35 @@ defmodule AppWeb.ChannelLive do
         <% end %>
       </div>
 
+      <aside class="flex flex-col w-48 h-full flex-0 border-l border-slate-50 bg-slate-600 text-white px-4 py-2">
+        <%= if @channel && @channel.members do %>
+          <%= for member <- @channel.members do %>
+            <div class="flex flex-row items-center gap-2">
+              <Components.user_name user={member.user} />
+              <Components.online_status online={@users[member.user.id]} />
+            </div>
+          <% end %>
+        <% end %>
+      </aside>
+
       <Components.add_channel_modal form={@add_channel_form} />
     </div>
     """
   end
 
   def mount(_params, _session, socket) do
+    if connected?(socket) do
+      user = current_user(socket)
+
+      {:ok, _} =
+        Presence.track(self(), @presence, user.id, %{
+          name: user.display_name,
+          joined_at: :os.system_time(:seconds)
+        })
+
+      Phoenix.PubSub.subscribe(PubSub, @presence)
+    end
+
     AppWeb.Endpoint.subscribe("message:created")
     AppWeb.Endpoint.subscribe("message:updated")
     AppWeb.Endpoint.subscribe("message:deleted")
@@ -71,8 +98,10 @@ defmodule AppWeb.ChannelLive do
             actor: socket.assigns.current_user
           )
           |> to_form(),
-        editing_message_id: nil
+        editing_message_id: nil,
+        users: %{}
       )
+      |> handle_joins(Presence.list(@presence))
 
     {:ok, socket}
   end
@@ -290,6 +319,28 @@ defmodule AppWeb.ChannelLive do
       socket |> refresh_channel(channel_member.channel_id)
 
     {:noreply, socket}
+  end
+
+  @impl true
+  def handle_info(%Phoenix.Socket.Broadcast{event: "presence_diff", payload: diff}, socket) do
+    {
+      :noreply,
+      socket
+      |> handle_leaves(diff.leaves)
+      |> handle_joins(diff.joins)
+    }
+  end
+
+  defp handle_joins(socket, joins) do
+    Enum.reduce(joins, socket, fn {user, %{metas: [meta | _]}}, socket ->
+      assign(socket, :users, Map.put(socket.assigns.users, user, meta))
+    end)
+  end
+
+  defp handle_leaves(socket, leaves) do
+    Enum.reduce(leaves, socket, fn {user, _}, socket ->
+      assign(socket, :users, Map.delete(socket.assigns.users, user))
+    end)
   end
 
   defp refresh_channel(socket, id) do
