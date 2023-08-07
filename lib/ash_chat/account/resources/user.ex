@@ -37,6 +37,8 @@ defmodule App.Account.User do
       allow_nil? false
       default ""
     end
+
+    attribute :photo_url, :string
   end
 
   policies do
@@ -74,13 +76,14 @@ defmodule App.Account.User do
     end
 
     update :update do
-      accept [:display_name]
+      accept [:display_name, :photo_url]
     end
   end
 
   code_interface do
     define_for App.Account
     define :get_by_id, args: [:id], action: :by_id
+    define :update, action: :update
   end
 
   identities do

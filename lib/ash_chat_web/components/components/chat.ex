@@ -47,40 +47,43 @@ defmodule AppWeb.Components.Chat do
       <div
         :for={{dom_id, message} <- @messages}
         id={dom_id}
-        class="px-4 group hover:bg-slate-900 flex flex-row justify-between"
+        class="px-4 py-1 group hover:bg-slate-900 flex flex-row justify-between"
         phx-hook="Message"
         data-user-id={@current_user.id}
         data-sender-id={message.sender_id}
         data-created-at={message.created_at}
       >
-        <div class="flex flex-col">
-          <div class="flex flex-row items-end gap-2">
-            <.user_name user={message.sender} %></.user_name>
-            <.local_datetime
-              id={"#{message.id}-sent-at"}
-              datetime={message.created_at}
-              class="text-sm text-gray-300 hidden group-hover:block"
-            />
-          </div>
-
-          <%= if @editing_message_id == message.id do %>
-            <.simple_form
-              :let={f}
-              for={@form}
-              id="edit-message-form"
-              phx-submit="edit_message"
-              container_class="pb-4 bg-transparent"
-            >
-              <.input id="edit-message-input" field={f[:text]} class="bg-slate-800 text-white" />
-            </.simple_form>
-          <% else %>
+        <div class="flex flex-row items-center gap-3">
+          <.profile_photo user={message.sender} size={:sm} />
+          <div class="flex flex-col">
             <div class="flex flex-row items-end gap-2">
-              <span><%= message.text %></span>
-              <%= if message.edited do %>
-                <span class="text-sm text-gray-300">(edited)</span>
-              <% end %>
+              <.user_name user={message.sender} %></.user_name>
+              <.local_datetime
+                id={"#{message.id}-sent-at"}
+                datetime={message.created_at}
+                class="text-sm text-gray-300 hidden group-hover:block"
+              />
             </div>
-          <% end %>
+
+            <%= if @editing_message_id == message.id do %>
+              <.simple_form
+                :let={f}
+                for={@form}
+                id="edit-message-form"
+                phx-submit="edit_message"
+                container_class="pb-4 bg-transparent"
+              >
+                <.input id="edit-message-input" field={f[:text]} class="bg-slate-800 text-white" />
+              </.simple_form>
+            <% else %>
+              <div class="flex flex-row items-end gap-2">
+                <span><%= message.text %></span>
+                <%= if message.edited do %>
+                  <span class="text-sm text-gray-300">(edited)</span>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
         </div>
 
         <div class="hidden group-hover:block">
@@ -165,5 +168,28 @@ defmodule AppWeb.Components.Chat do
       if(@online, do: "bg-green-500", else: "bg-gray-100 border-gray-700")
     ]} />
     """
+  end
+
+  def profile_photo(assigns) do
+    ~H"""
+    <img
+      src={profile_photo_url(@user)}
+      class={[
+        "rounded-md",
+        case @size do
+          :xs -> "h-6 w-6"
+          :sm -> "h-10 w-10"
+        end
+      ]}
+    />
+    """
+  end
+
+  defp profile_photo_url(%{photo_url: nil} = user) do
+    "https://picsum.photos/seed/#{user.id}/200/200"
+  end
+
+  defp profile_photo_url(user) do
+    user.photo_url
   end
 end
