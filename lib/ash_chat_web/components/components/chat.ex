@@ -107,11 +107,11 @@ defmodule AppWeb.Components.Chat do
       for={@form}
       id="message-form"
       phx-submit="send_message"
-      phx-hook="MessageForm"
-      container_class="p-4 bg-slate-800"
+      container_class="px-4 pb-4 bg-slate-800"
     >
       <.input
         id="message-input"
+        phx-hook="MessageInput"
         field={@form[:text]}
         placeholder={"Message ##{@channel.name}"}
         class="bg-slate-800 text-white"
@@ -167,6 +167,44 @@ defmodule AppWeb.Components.Chat do
       "rounded-full h-2 w-2",
       if(@online, do: "bg-green-500", else: "bg-gray-100 border-gray-700")
     ]} />
+    """
+  end
+
+  def typing_status(assigns) do
+    ~H"""
+    <div class="px-4 pt-2 text-sm text-gray-300">
+      <.typing_status_line names={@names} />
+    </div>
+    """
+  end
+
+  def typing_status_line(%{names: []} = assigns) do
+    ~H"""
+
+    """
+  end
+
+  def typing_status_line(%{names: [_name]} = assigns) do
+    ~H"""
+    <%= Enum.at(@names, 0) %> is typing...
+    """
+  end
+
+  def typing_status_line(%{names: [_, _]} = assigns) do
+    ~H"""
+    <%= Enum.at(@names, 0) %> and <%= Enum.at(@names, 1) %> are typing...
+    """
+  end
+
+  def typing_status_line(%{names: [_, _, _]} = assigns) do
+    ~H"""
+    <%= Enum.at(@names, 0) %>, <%= Enum.at(@names, 1) %>, and <%= Enum.at(@names, 2) %> are typing...
+    """
+  end
+
+  def typing_status_line(assigns) do
+    ~H"""
+    Several people are typing...
     """
   end
 

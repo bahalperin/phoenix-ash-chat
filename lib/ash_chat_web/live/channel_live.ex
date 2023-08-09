@@ -35,6 +35,12 @@ defmodule AppWeb.ChannelLive do
               editing_message_id={@editing_message_id}
               form={@edit_message_form}
             />
+            <Components.typing_status names={
+              @users
+              |> Enum.map(fn {_key, value} -> value end)
+              |> Enum.filter(fn value -> value.typing_in_channel == @channel.id end)
+              |> Enum.map(fn value -> value.name end)
+            } />
             <Components.message_form form={@message_form} channel={@channel} />
           <% else %>
             <.button phx-click="join_channel">Join</.button>
@@ -44,7 +50,7 @@ defmodule AppWeb.ChannelLive do
 
       <aside class="flex flex-col w-48 h-full flex-0 border-l border-slate-50 bg-slate-600 text-white px-4 py-2 gap-4">
         <%= if @channel && @channel.members do %>
-          <%= for member <- @channel.members do %>
+          <%= for member <- Enum.sort_by(@channel.members, fn m -> m.user.display_name end, :desc) do %>
             <div class="flex flex-row items-center gap-2">
               <Components.profile_photo user={member.user} size={:xs} />
               <Components.user_name user={member.user} />
@@ -66,6 +72,7 @@ defmodule AppWeb.ChannelLive do
       {:ok, _} =
         Presence.track(self(), @presence, user.id, %{
           name: user.display_name,
+          typing_in_channel: nil,
           joined_at: :os.system_time(:seconds)
         })
 
@@ -234,6 +241,34 @@ defmodule AppWeb.ChannelLive do
          AshPhoenix.Form.for_action(message, :edit, actor: current_user(socket), api: App.Chat)
      )
      |> stream_insert(:messages, message, at: -1)}
+  end
+
+  def handle_event("start_typing", _params, socket) do
+    user = current_user(socket)
+
+    metas =
+      Presence.get_by_key(@presence, user.id)[:metas]
+      |> List.first()
+      |> Map.merge(%{
+        typing_in_channel: current_channel(socket).id
+      })
+
+    Presence.update(self(), @presence, user.id, metas)
+    {:noreply, socket}
+  end
+
+  def handle_event("stop_typing", _params, socket) do
+    user = current_user(socket)
+
+    metas =
+      Presence.get_by_key(@presence, user.id)[:metas]
+      |> List.first()
+      |> Map.merge(%{
+        typing_in_channel: nil
+      })
+
+    Presence.update(self(), @presence, user.id, metas)
+    {:noreply, socket}
   end
 
   def handle_info(
