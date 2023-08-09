@@ -12,7 +12,7 @@ defmodule AppWeb.Components.Chat do
       <%= for channel <- @channels do %>
         <div
           class="px-2"
-          phx-hook={if(channel.id == @channel.id, do: "ScrollIntoView", else: nil)}
+          phx-hook={if(@channel && channel.id == @channel.id, do: "ScrollIntoView", else: nil)}
           id={"channel-item-#{channel.id}"}
         >
           <.link

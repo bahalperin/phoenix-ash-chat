@@ -37,9 +37,11 @@ defmodule AppWeb.ChannelLive do
             />
             <Components.typing_status names={
               @users
-              |> Enum.map(fn {_key, value} -> value end)
-              |> Enum.filter(fn value -> value.typing_in_channel == @channel.id end)
-              |> Enum.map(fn value -> value.name end)
+              |> Enum.map(fn {key, value} -> {key, value} end)
+              |> Enum.filter(fn {key, value} ->
+                value.typing_in_channel == @channel.id && key !== @current_user.id
+              end)
+              |> Enum.map(fn {_key, value} -> value.name end)
             } />
             <Components.message_form form={@message_form} channel={@channel} />
           <% else %>
