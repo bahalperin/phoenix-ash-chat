@@ -10,7 +10,11 @@ defmodule AppWeb.Components.Chat do
     ~H"""
     <div class="flex flex-col flex-1 py-2 gap-0.5 overflow-y-auto w-full items-stretch">
       <%= for channel <- @channels do %>
-        <div class="px-2">
+        <div
+          class="px-2"
+          phx-hook={if(channel.id == @channel.id, do: "ScrollIntoView", else: nil)}
+          id={"channel-item-#{channel.id}"}
+        >
           <.link
             navigate={"/channel/#{channel.id}"}
             class={[
