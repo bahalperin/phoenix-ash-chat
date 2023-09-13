@@ -78,7 +78,8 @@ defmodule AppWeb.ProfileLive do
      |> assign(form: nil)
      |> allow_upload(:photo,
        accept: ~w(.jpg .jpeg),
-       max_entries: 1
+       max_entries: 1,
+       external: &presign_upload/2
      )}
   end
 
@@ -101,20 +102,8 @@ defmodule AppWeb.ProfileLive do
 
   def handle_event("save_photo", _params, socket) do
     uploaded_files =
-      consume_uploaded_entries(socket, :photo, fn %{path: path}, _entry ->
-        dest =
-          Path.join([
-            :code.priv_dir(:ash_chat),
-            "static",
-            "uploads",
-            "user",
-            "profile",
-            socket.assigns.user.id
-          ])
-
-        File.cp!(path, dest)
-        url = "/uploads/user/profile/#{socket.assigns.user.id}"
-        {:ok, url}
+      consume_uploaded_entries(socket, :photo, fn %{key: key, url: url}, _entry ->
+        {:ok, "#{url}/#{key}"}
       end)
 
     uploaded_file = uploaded_files |> Enum.at(0)
@@ -137,6 +126,35 @@ defmodule AppWeb.ProfileLive do
       {:error, form} ->
         {:noreply, socket |> assign(form: form)}
     end
+  end
+
+  defp presign_upload(entry, socket) do
+    uploads = socket.assigns.uploads
+    bucket = "phoenix-ash-chat-dev"
+    key = "profile_photo/#{socket.assigns.user.id}"
+
+    config = %{
+      region: "us-east-2",
+      access_key_id: System.fetch_env!("AWS_ACCESS_KEY_ID"),
+      secret_access_key: System.fetch_env!("AWS_SECRET_ACCESS_KEY")
+    }
+
+    {:ok, fields} =
+      SimpleS3Upload.sign_form_upload(config, bucket,
+        key: key,
+        content_type: entry.client_type,
+        max_file_size: uploads[entry.upload_config].max_file_size,
+        expires_in: :timer.hours(1)
+      )
+
+    meta = %{
+      uploader: "S3",
+      key: key,
+      url: "http://#{bucket}.s3-#{config.region}.amazonaws.com",
+      fields: fields
+    }
+
+    {:ok, meta, socket}
   end
 
   defp assign_form(socket, user) do
