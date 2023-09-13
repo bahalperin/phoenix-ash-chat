@@ -19,10 +19,15 @@ defmodule AppWeb.Components.Chat do
             navigate={"/channel/#{channel.id}"}
             class={[
               @channel && channel.id === @channel.id && "font-bold",
-              "hover:bg-slate-800 p-2 w-full inline-block rounded-md"
+              "hover:bg-slate-800 p-2 w-full inline-block rounded-md flex flex-row gap-2 items-center"
             ]}
           >
-            # <%= channel.name %>
+            <%= if channel.private do %>
+              <Heroicons.lock_closed class="h-5 w-5" />
+            <% else %>
+              <Heroicons.hashtag class="h-5 w-5" />
+            <% end %>
+            <%= channel.name %>
             <%= if channel.current_member && channel.current_member.unread_count > 0 do %>
               <span class="bg-red-100 text-red-800 text-sm font-medium mr-2 px-2.5 py-0.5 rounded dark:bg-red-900 dark:text-red-300 ml-1">
                 <%= channel.current_member.unread_count %>
@@ -120,7 +125,6 @@ defmodule AppWeb.Components.Chat do
         placeholder={"Message ##{@channel.name}"}
         class="bg-slate-800 text-white"
       />
-
       <.input id="channel_input" field={@form[:channel_id]} value={@channel.id} type="hidden" />
     </.simple_form>
     """
@@ -137,13 +141,21 @@ defmodule AppWeb.Components.Chat do
         for={@form}
         phx-submit="create_channel"
         phx-change="validate_channel"
-        container_class="bg-slate-800 text-white"
+        container_class="bg-slate-800 text-white flex flex-col gap-2"
       >
         <.input
           field={@form[:name]}
           label="Channel Name"
           label_class="text-white"
           class="bg-slate-800 text-white"
+        />
+        <.input
+          id="channel-privacy"
+          type="checkbox"
+          field={@form[:private]}
+          class="bg-slate-800 text-white"
+          label="Private?"
+          label_class="text-white"
         />
         <:actions>
           <.button>Submit</.button>

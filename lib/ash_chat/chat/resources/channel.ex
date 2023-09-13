@@ -9,6 +9,10 @@ defmodule App.Chat.Channel do
     attribute :name, :string do
       allow_nil? false
     end
+
+    attribute :private, :boolean do
+      default false
+    end
   end
 
   pub_sub do
@@ -48,11 +52,11 @@ defmodule App.Chat.Channel do
     end
 
     read :read_all do
-      prepare build(sort: [:name], load: [:members, :current_member])
+      prepare build(sort: [name: :desc], load: [:members, :current_member])
     end
 
     create :create do
-      accept [:name]
+      accept [:name, :private]
 
       validate match(:name, ~r/^[[:graph:]]+$/), message: "No whitespace allowed in channel name"
     end

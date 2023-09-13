@@ -28,13 +28,13 @@ defmodule AppWeb.ChannelLive do
 
       <div class="flex flex-col h-full flex-1 bg-slate-800 text-white">
         <%= if @channel do %>
+          <Components.message_list
+            messages={@streams.messages}
+            current_user={@current_user}
+            editing_message_id={@editing_message_id}
+            form={@edit_message_form}
+          />
           <%= if @channel.current_member do %>
-            <Components.message_list
-              messages={@streams.messages}
-              current_user={@current_user}
-              editing_message_id={@editing_message_id}
-              form={@edit_message_form}
-            />
             <Components.typing_status names={
               @users
               |> Enum.map(fn {key, value} -> {key, value} end)

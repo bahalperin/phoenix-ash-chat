@@ -46,7 +46,9 @@ defmodule App.Chat.Message do
     end
 
     policy action_type(:read) do
-      authorize_if always()
+      authorize_if expr(
+                     channel.private == false || exists(channel.members, user_id == ^actor(:id))
+                   )
     end
 
     policy action_type(:create) do

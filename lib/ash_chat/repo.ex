@@ -3,6 +3,6 @@ defmodule App.Repo do
 
   # Installs Postgres extensions that ash commonly uses
   def installed_extensions do
-    ["uuid-ossp", "citext"]
+    ["uuid-ossp", "citext", "ash-functions"]
   end
 end
