@@ -1,9 +1,10 @@
 
 export const MessageForm = {
-  updated() {
-    if (document.getElementsByClassName('invalid-feedback').length == 0) {
-      const input = document.getElementById('message-input');
-      input.value = '';
-    }
+  mounted() {
+    this.el.addEventListener('submit', () => {
+      setTimeout(() => {
+        document.getElementById('message-input').value = ''
+      }, 50)
+    })
   }
 }

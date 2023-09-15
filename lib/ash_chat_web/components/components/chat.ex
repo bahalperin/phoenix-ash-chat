@@ -116,6 +116,7 @@ defmodule AppWeb.Components.Chat do
       for={@form}
       id="message-form"
       phx-submit="send_message"
+      phx-hook="MessageForm"
       container_class="px-4 pb-4 bg-slate-800"
     >
       <.input
