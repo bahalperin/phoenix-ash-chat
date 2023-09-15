@@ -55,7 +55,9 @@ defmodule App.MixProject do
       {:ash_postgres, "~> 1.3"},
       {:ash_phoenix, "~> 1.2"},
       {:ash_authentication, "~> 3.11"},
-      {:ash_authentication_phoenix, "~> 1.7"}
+      {:ash_authentication_phoenix, "~> 1.7"},
+      {:ash_appsignal, "~> 0.1.0"},
+      {:appsignal_phoenix, "~> 2.0"}
     ]
   end
 

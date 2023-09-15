@@ -38,6 +38,28 @@ config :ash_chat, App.Mailer, adapter: Swoosh.Adapters.Local
 # see https://ash-hq.org/docs/guides/ash/latest/get-started#temporary-config for more details
 config :ash, :use_all_identities_in_manage_relationship?, false
 
+config :ash, :tracer, AshAppsignal
+
+config :ash_appsignal,
+  trace_types: [
+    :custom,
+    :action,
+    :changeset,
+    :validation,
+    :change,
+    :before_transaction,
+    :before_action,
+    :after_transaction,
+    :after_action,
+    :custom_flow_step,
+    :flow,
+    :query,
+    :preparation
+  ]
+
+{revision, _exitcode} = System.cmd("git", ["log", "--pretty=format:%h", "-n 1"])
+config :appsignal, :config, revision: revision
+
 config :spark, :formatter,
   remove_parens?: true,
   "Ash.Resource": [

@@ -14,7 +14,10 @@ kill_signal = "SIGTERM"
   PHX_HOST = "phoenix-ash-chat.fly.dev"
   PHX_SERVER = true
   PORT = "8080"
-
+  APPSIGNAL_OTP_APP="ash_chat"
+  APPSIGNAL_APP_NAME="ash_chat"
+  APPSIGNAL_APP_ENV="prod"
+  
 [http_service]
   internal_port = 8080
   force_https = true
