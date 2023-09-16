@@ -1,4 +1,5 @@
 defmodule AppWeb.Components.Chat do
+  alias App.Chat.Channel
   use Phoenix.Component
 
   import AppWeb.CoreComponents
@@ -22,11 +23,7 @@ defmodule AppWeb.Components.Chat do
               "hover:bg-slate-800 p-2 w-full inline-block rounded-md flex flex-row gap-2 items-center"
             ]}
           >
-            <%= if channel.private do %>
-              <Heroicons.lock_closed class="h-5 w-5" />
-            <% else %>
-              <Heroicons.hashtag class="h-5 w-5" />
-            <% end %>
+            <.channel_icon channel={channel} />
             <%= channel.name %>
             <%= if channel.current_member && channel.current_member.unread_count > 0 do %>
               <span class="bg-red-100 text-red-800 text-sm font-medium mr-2 px-2.5 py-0.5 rounded dark:bg-red-900 dark:text-red-300 ml-1">
@@ -37,6 +34,18 @@ defmodule AppWeb.Components.Chat do
         </div>
       <% end %>
     </div>
+    """
+  end
+
+  attr :channel, Channel
+
+  def channel_icon(assigns) do
+    ~H"""
+    <%= if @channel.private do %>
+      <Heroicons.lock_closed class="h-5 w-5" />
+    <% else %>
+      <Heroicons.hashtag class="h-5 w-5" />
+    <% end %>
     """
   end
 

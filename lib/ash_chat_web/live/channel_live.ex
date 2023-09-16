@@ -28,6 +28,26 @@ defmodule AppWeb.ChannelLive do
 
       <div class="flex flex-col h-full flex-1 bg-slate-800 text-white">
         <%= if @channel do %>
+          <div class="flex flex-row items-center justify-between py-3 px-3 border-b border-white">
+            <div class="flex flex-row gap-2 items-center">
+              <Components.channel_icon channel={@channel} />
+              <h3 class="text-lg font-bold">
+                <%= @channel.name %>
+              </h3>
+            </div>
+            <div class="flex flex-row gap-3">
+              <%= if @channel && @channel.members do %>
+                <div class="flex flex-row items-center gap-1">
+                  <%= for member <- Enum.sort_by(@channel.members, fn m -> m.user.display_name end, :desc) do %>
+                    <Components.profile_photo user={member.user} size={:xs} />
+                  <% end %>
+                </div>
+              <% end %>
+              <span class="font-bold">
+                <%= Enum.count(@channel.members) %>
+              </span>
+            </div>
+          </div>
           <Components.message_list
             messages={@streams.messages}
             current_user={@current_user}
@@ -49,18 +69,6 @@ defmodule AppWeb.ChannelLive do
           <% end %>
         <% end %>
       </div>
-
-      <aside class="flex flex-col w-48 h-full flex-0 border-l border-slate-50 bg-slate-600 text-white px-4 py-2 gap-4">
-        <%= if @channel && @channel.members do %>
-          <%= for member <- Enum.sort_by(@channel.members, fn m -> m.user.display_name end, :desc) do %>
-            <div class="flex flex-row items-center gap-2">
-              <Components.profile_photo user={member.user} size={:xs} />
-              <Components.user_name user={member.user} />
-              <Components.online_status online={@users[member.user.id]} />
-            </div>
-          <% end %>
-        <% end %>
-      </aside>
 
       <Components.add_channel_modal form={@add_channel_form} />
     </div>
