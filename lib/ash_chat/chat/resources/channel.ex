@@ -1,5 +1,8 @@
 defmodule App.Chat.Channel do
+  require Ash.Resource.Change.Builtins
+
   use Ash.Resource,
+    authorizers: [Ash.Policy.Authorizer],
     data_layer: AshPostgres.DataLayer,
     notifiers: [Ash.Notifier.PubSub]
 
@@ -15,13 +18,6 @@ defmodule App.Chat.Channel do
     end
   end
 
-  pub_sub do
-    module AppWeb.Endpoint
-    prefix "channel"
-
-    publish :create, ["created", [:id, nil]]
-  end
-
   relationships do
     has_many :members, App.Chat.ChannelMember do
       writable? true
@@ -33,6 +29,37 @@ defmodule App.Chat.Channel do
     end
 
     has_many :messages, App.Chat.Message, sort: [created_at: :desc]
+
+    belongs_to :owner, App.Account.User do
+      api App.Account
+      source_attribute :owner_id
+      destination_attribute :id
+    end
+  end
+
+  pub_sub do
+    module AppWeb.Endpoint
+    prefix "channel"
+
+    publish :create, ["created", [:id, nil]]
+  end
+
+  policies do
+    policy action_type(:read) do
+      authorize_if expr(private == false || exists(members, user_id == ^actor(:id)))
+    end
+
+    policy action_type(:destroy) do
+      forbid_if always()
+    end
+
+    policy action_type(:create) do
+      authorize_if always()
+    end
+
+    policy action_type(:update) do
+      authorize_if relates_to_actor_via(:owner)
+    end
   end
 
   postgres do
@@ -59,6 +86,26 @@ defmodule App.Chat.Channel do
       accept [:name, :private]
 
       validate match(:name, ~r/^[[:graph:]]+$/), message: "No whitespace allowed in channel name"
+
+      change relate_actor(:owner)
+
+      change fn changeset, _ ->
+        Ash.Changeset.after_action(changeset, fn changeset, channel ->
+          App.Chat.create!(
+            Ash.Changeset.for_create(
+              App.Chat.ChannelMember,
+              :create,
+              %{
+                channel_id: channel.id,
+                user_id: channel.owner_id
+              }
+            ),
+            actor: %{type: :admin}
+          )
+
+          {:ok, channel}
+        end)
+      end
     end
   end
 

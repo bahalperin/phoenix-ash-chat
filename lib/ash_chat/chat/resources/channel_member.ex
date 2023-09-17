@@ -1,5 +1,6 @@
 defmodule App.Chat.ChannelMember do
   use Ash.Resource,
+    authorizers: [Ash.Policy.Authorizer],
     data_layer: AshPostgres.DataLayer,
     notifiers: [Ash.Notifier.PubSub]
 
@@ -9,13 +10,6 @@ defmodule App.Chat.ChannelMember do
 
     attribute :channel_id, :uuid
     attribute :user_id, :uuid
-  end
-
-  pub_sub do
-    module AppWeb.Endpoint
-    prefix "channel_member"
-
-    publish :join_channel, "joined"
   end
 
   relationships do
@@ -30,6 +24,39 @@ defmodule App.Chat.ChannelMember do
       allow_nil?: false,
       writable?: true,
       private?: false
+  end
+
+  pub_sub do
+    module AppWeb.Endpoint
+    prefix "channel_member"
+
+    publish :join_channel, "joined"
+  end
+
+  policies do
+    policy action_type(:create) do
+      authorize_if actor_attribute_equals(:type, :admin)
+    end
+
+    policy action_type(:join_channel) do
+      authorize_if expr(channel.private == false)
+    end
+
+    policy action_type(:add_to_channel) do
+      authorize_if expr(exists(channel.members, user_id == ^actor(:id)))
+    end
+
+    policy action_type(:update) do
+      authorize_if relates_to_actor_via(:user)
+    end
+
+    policy action_type(:read) do
+      authorize_if always()
+    end
+
+    policy action_type(:destroy) do
+      forbid_if always()
+    end
   end
 
   postgres do
@@ -51,6 +78,12 @@ defmodule App.Chat.ChannelMember do
 
     create :join_channel do
       accept [:channel_id]
+
+      change set_attribute(:user_id, actor(:id))
+    end
+
+    create :add_to_channel do
+      accept [:channel_id, :user_id]
 
       change set_attribute(:user_id, actor(:id))
     end

@@ -175,6 +175,35 @@ defmodule AppWeb.Components.Chat do
     """
   end
 
+  def add_member_modal(assigns) do
+    ~H"""
+    <.modal
+      id="add_member_modal"
+      container_class="bg-slate-800 text-white"
+      background_class="bg-black opacity-80"
+    >
+      <form phx-change="search_users">
+        <.input
+          value={@search_user_text}
+          phx-throttle={200}
+          name="user-search"
+          label="Search for a user"
+          label_class="text-white"
+          class="bg-slate-800 text-white"
+        />
+      </form>
+      <div class="flex flex-col gap-2">
+        <%= for user <- @user_search_results do %>
+          <div class="flex flex-row gap-2" phx-click="add_member" phx-value-user-id={user.id}>
+            <.profile_photo user={user} size={:xs} />
+            <.user_name user={user} />
+          </div>
+        <% end %>
+      </div>
+    </.modal>
+    """
+  end
+
   def user_name(assigns) do
     ~H"""
     <.link navigate={"/profile/#{@user.id}"} class="font-bold hover:underline">
