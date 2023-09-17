@@ -5,6 +5,12 @@ defmodule AppWeb.Components.AddMemberModal do
 
   alias AppWeb.Components.Chat, as: Components
 
+  def render(%{channel: nil} = assigns) do
+    ~H"""
+    <div />
+    """
+  end
+
   def render(assigns) do
     ~H"""
     <div>
