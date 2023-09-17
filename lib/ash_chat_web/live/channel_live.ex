@@ -43,13 +43,13 @@ defmodule AppWeb.ChannelLive do
               <div class="flex flex-row gap-3">
                 <%= if @channel && @channel.members do %>
                   <div class="flex flex-row items-center gap-1">
-                    <%= for member <- Enum.sort_by(@channel.members, fn m -> m.user.display_name end, :desc) do %>
+                    <%= for member <- @channel.members |> Enum.sort_by(fn m -> m.user.display_name end, :desc) |> Enum.take(5) do %>
                       <Components.profile_photo user={member.user} size={:xs} />
                     <% end %>
                   </div>
                 <% end %>
                 <span class="font-bold">
-                  <%= Enum.count(@channel.members) %>
+                  <.number_with_max value={Enum.count(@channel.members)} max={100} />
                 </span>
               </div>
             </.button>

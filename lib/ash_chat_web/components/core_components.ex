@@ -680,4 +680,16 @@ defmodule AppWeb.CoreComponents do
     <time datetime={@datetime} id={@id} class={@class} phx-hook="LocalTime" />
     """
   end
+
+  def number_with_max(%{value: value, max: max} = assigns) when value > max do
+    ~H"""
+    <%= @max %>+
+    """
+  end
+
+  def number_with_max(assigns) do
+    ~H"""
+    <%= @value %>
+    """
+  end
 end
