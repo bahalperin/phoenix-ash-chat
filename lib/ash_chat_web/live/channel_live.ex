@@ -35,18 +35,24 @@ defmodule AppWeb.ChannelLive do
                 <%= @channel.name %>
               </h3>
             </div>
-            <div class="flex flex-row gap-3">
-              <%= if @channel && @channel.members do %>
-                <div class="flex flex-row items-center gap-1">
-                  <%= for member <- Enum.sort_by(@channel.members, fn m -> m.user.display_name end, :desc) do %>
-                    <Components.profile_photo user={member.user} size={:xs} />
-                  <% end %>
-                </div>
-              <% end %>
-              <span class="font-bold">
-                <%= Enum.count(@channel.members) %>
-              </span>
-            </div>
+
+            <.button
+              phx-click={show_modal("add_member_modal")}
+              class="bg-transparent hover:bg-slate-900"
+            >
+              <div class="flex flex-row gap-3">
+                <%= if @channel && @channel.members do %>
+                  <div class="flex flex-row items-center gap-1">
+                    <%= for member <- Enum.sort_by(@channel.members, fn m -> m.user.display_name end, :desc) do %>
+                      <Components.profile_photo user={member.user} size={:xs} />
+                    <% end %>
+                  </div>
+                <% end %>
+                <span class="font-bold">
+                  <%= Enum.count(@channel.members) %>
+                </span>
+              </div>
+            </.button>
           </div>
           <Components.message_list
             messages={@streams.messages}
@@ -71,6 +77,12 @@ defmodule AppWeb.ChannelLive do
       </div>
 
       <Components.add_channel_modal form={@add_channel_form} />
+      <.live_component
+        module={AppWeb.Components.AddMemberModal}
+        id="add_member_modal"
+        channel={@channel}
+        current_user={@current_user}
+      />
     </div>
     """
   end
@@ -191,7 +203,6 @@ defmodule AppWeb.ChannelLive do
   def handle_event("create_channel", %{"form" => params}, socket) do
     case AshPhoenix.Form.submit(socket.assigns.add_channel_form, params: params) do
       {:ok, channel} ->
-        ChannelMember.join_channel(%{channel_id: channel.id}, actor: current_user(socket))
         {:noreply, socket |> push_navigate(to: ~p"/channel/#{channel.id}")}
 
       {:error, form} ->
@@ -202,7 +213,7 @@ defmodule AppWeb.ChannelLive do
   def handle_event("join_channel", _, socket) do
     channel = current_channel(socket)
 
-    ChannelMember.join_channel(
+    ChannelMember.join_channel!(
       %{
         channel_id: channel.id
       },
