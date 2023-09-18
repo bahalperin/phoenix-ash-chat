@@ -104,6 +104,10 @@ defmodule App.Chat.ChannelMember do
     define :add_to_channel, action: :add_to_channel
   end
 
+  identities do
+    identity :user_channel, [:user_id, :channel_id]
+  end
+
   calculations do
     calculate :unread_count,
               :integer,

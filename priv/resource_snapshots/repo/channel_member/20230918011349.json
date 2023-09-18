@@ -1,0 +1,101 @@
+{
+  "attributes": [
+    {
+      "default": "fragment(\"uuid_generate_v4()\")",
+      "size": null,
+      "type": "uuid",
+      "source": "id",
+      "references": null,
+      "primary_key?": true,
+      "allow_nil?": false,
+      "generated?": false
+    },
+    {
+      "default": "nil",
+      "size": null,
+      "type": "utc_datetime_usec",
+      "source": "last_read_at",
+      "references": null,
+      "primary_key?": false,
+      "allow_nil?": true,
+      "generated?": false
+    },
+    {
+      "default": "nil",
+      "size": null,
+      "type": "uuid",
+      "source": "channel_id",
+      "references": {
+        "name": "channel_member_channel_id_fkey",
+        "table": "channel",
+        "primary_key?": true,
+        "schema": "public",
+        "multitenancy": {
+          "global": null,
+          "strategy": null,
+          "attribute": null
+        },
+        "destination_attribute": "id",
+        "on_delete": null,
+        "on_update": null,
+        "deferrable": false,
+        "destination_attribute_default": null,
+        "destination_attribute_generated": null
+      },
+      "primary_key?": false,
+      "allow_nil?": true,
+      "generated?": false
+    },
+    {
+      "default": "nil",
+      "size": null,
+      "type": "uuid",
+      "source": "user_id",
+      "references": {
+        "name": "channel_member_user_id_fkey",
+        "table": "users",
+        "primary_key?": true,
+        "schema": "public",
+        "multitenancy": {
+          "global": null,
+          "strategy": null,
+          "attribute": null
+        },
+        "destination_attribute": "id",
+        "on_delete": null,
+        "on_update": null,
+        "deferrable": false,
+        "destination_attribute_default": null,
+        "destination_attribute_generated": null
+      },
+      "primary_key?": false,
+      "allow_nil?": true,
+      "generated?": false
+    }
+  ],
+  "table": "channel_member",
+  "hash": "41032BAAB540FFB320F6949700DAC4CBC86ECC1034462310FFA46CF9C5902B09",
+  "repo": "Elixir.App.Repo",
+  "identities": [
+    {
+      "name": "user_channel",
+      "keys": [
+        "user_id",
+        "channel_id"
+      ],
+      "base_filter": null,
+      "index_name": "channel_member_user_channel_index"
+    }
+  ],
+  "schema": null,
+  "check_constraints": [],
+  "custom_indexes": [],
+  "multitenancy": {
+    "global": null,
+    "strategy": null,
+    "attribute": null
+  },
+  "base_filter": null,
+  "custom_statements": [],
+  "has_create_action": true
+}
