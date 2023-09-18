@@ -167,6 +167,8 @@ defmodule AppWeb.ChannelLive do
   end
 
   def handle_event("send_message", %{"form" => params}, socket) do
+    stop_typing(socket)
+
     case AshPhoenix.Form.submit(socket.assigns.message_form, params: params) do
       {:ok, _message} ->
         {:noreply,
@@ -279,16 +281,7 @@ defmodule AppWeb.ChannelLive do
   end
 
   def handle_event("stop_typing", _params, socket) do
-    user = current_user(socket)
-
-    metas =
-      Presence.get_by_key(@presence, user.id)[:metas]
-      |> List.first()
-      |> Map.merge(%{
-        typing_in_channel: nil
-      })
-
-    Presence.update(self(), @presence, user.id, metas)
+    stop_typing(socket)
     {:noreply, socket}
   end
 
@@ -385,6 +378,19 @@ defmodule AppWeb.ChannelLive do
       |> handle_leaves(diff.leaves)
       |> handle_joins(diff.joins)
     }
+  end
+
+  defp stop_typing(socket) do
+    user = current_user(socket)
+
+    metas =
+      Presence.get_by_key(@presence, user.id)[:metas]
+      |> List.first()
+      |> Map.merge(%{
+        typing_in_channel: nil
+      })
+
+    Presence.update(self(), @presence, user.id, metas)
   end
 
   defp handle_joins(socket, joins) do
