@@ -10,6 +10,5 @@ defmodule App.Chat.Registry do
     entry App.Chat.Channel
     entry App.Chat.ChannelMember
     entry App.Chat.Message
-    entry App.Chat.User
   end
 end
