@@ -79,7 +79,7 @@ defmodule App.Chat.Channel do
     end
 
     read :read_all do
-      prepare build(sort: [name: :desc], load: [:members, :current_member])
+      prepare build(sort: :name, load: [:members, :current_member])
     end
 
     create :create do
