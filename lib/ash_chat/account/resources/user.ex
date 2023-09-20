@@ -65,6 +65,8 @@ defmodule App.Account.User do
   end
 
   actions do
+    defaults [:create]
+
     read :read do
       primary? true
     end
