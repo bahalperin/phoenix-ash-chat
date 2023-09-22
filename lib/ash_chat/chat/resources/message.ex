@@ -4,6 +4,8 @@ defmodule App.Chat.Message do
     data_layer: AshPostgres.DataLayer,
     notifiers: [Ash.Notifier.PubSub]
 
+  alias App.Chat.Checks
+
   attributes do
     uuid_primary_key :id
 
@@ -52,7 +54,7 @@ defmodule App.Chat.Message do
     end
 
     policy action_type(:create) do
-      authorize_if always()
+      authorize_if Checks.ActorIsChannelMember
     end
 
     policy action_type(:update) do
