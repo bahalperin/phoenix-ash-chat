@@ -160,7 +160,6 @@ defmodule App.ChatTest do
 
     test "can only delete your own messages", %{
       members: [member1, member2],
-      non_member: non_member,
       channel: channel
     } do
       message = Message.send!(%{text: "delete", channel_id: channel.id}, actor: member1)
